@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nash — Keyword Explorer</title>
+<style>
+/* ══ CSS VARIABLES — DARK (default) ══════════════════════ */
+:root {
+  --bg:        #000000;
+  --surface:   #0a0a0a;
+  --surface2:  #111111;
+  --surface3:  #0a0a0a;
+  --border:    rgba(255,255,255,0.08);
+  --border-hi: rgba(255,255,255,0.16);
+  --txt:       #c8b8e0;
+  --txt-hi:    rgba(255,255,255,0.88);
+  --txt-mid:   rgba(255,255,255,0.65);
+  --txt-lo:    rgba(255,255,255,0.42);
+  --txt-dim:   #9988bb;
+  --accent:    #cc55ff;
+  --accent-bg: #1e003a;
+  --green:     #00e5a0;
+  --green-bg:  #001a12;
+  --err:       #ff4455;
+  --p5-bg-r:0; --p5-bg-g:0; --p5-bg-b:0;
+  --p5-txt-r:255; --p5-txt-g:255; --p5-txt-b:255;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); font-family: 'Courier New', monospace;
+  color: var(--txt); overflow-x: hidden;
+}
+
+#loading {
+  position: fixed; inset: 0; background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 999; gap: 16px; transition: opacity .5s;
+}
+#loading-text { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--txt-dim); }
+.spinner {
+  width: 22px; height: 22px;
+  border: 2px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#error-msg {
+  display: none; color: var(--err); font-size: 10px;
+  letter-spacing: 1.5px; text-align: center;
+  max-width: 400px; line-height: 1.8; padding: 0 20px;
+}
+
+/* ── STICKY WRAPPER ──────────────────────────────────── */
+#cw {
+  position: sticky; top: 69px; /* tab-bar ~33px + toolbar ~36px */
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  z-index: 10; overflow: hidden;
+  display: flex; flex-direction: column;
+  transition: opacity .55s, transform .55s;
+}
+
+/* ── TOOLBAR ─────────────────────────────────────────── */
+#toolbar {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 6px; padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg); z-index: 15; flex-shrink: 0;
+  position: sticky; top: 33px; /* justo debajo del tab-bar */
+}
+#toolbar-left  { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex: 1; min-width: 0; }
+#toolbar-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+select {
+  background: var(--surface); border: 1px solid var(--border-hi); color: var(--accent);
+  padding: 4px 9px; font-family: 'Courier New', monospace;
+  font-size: 9px; letter-spacing: 1.5px; cursor: pointer;
+  outline: none; text-transform: uppercase; max-width: 160px;
+}
+select option { background: var(--surface); }
+#klbl { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--txt-lo); transition: color .4s; white-space: nowrap; }
+
+#view-toggle, #mode-toggle { display: flex; gap: 2px; }
+#topn-sel {
+  background: var(--surface2); border: 1px solid var(--accent); color: var(--accent);
+  padding: 4px 9px; font-family: 'Courier New', monospace;
+  font-size: 9px; letter-spacing: 1.5px; cursor: pointer;
+  outline: none; text-transform: uppercase; max-width: 110px;
+}
+#view-toggle button, #mode-toggle button {
+  background: var(--surface); border: 1px solid var(--border-hi); color: var(--txt-lo);
+  padding: 4px 8px; font-family: 'Courier New', monospace;
+  font-size: 9px; letter-spacing: 1px; cursor: pointer;
+  text-transform: uppercase; outline: none;
+  transition: color .2s, border-color .2s, background .2s;
+  white-space: nowrap;
+}
+#view-toggle button.active { color: var(--accent); border-color: var(--accent); background: var(--accent-bg); }
+#mode-toggle button.active  { color: var(--green); border-color: var(--green); background: var(--green-bg); }
+
+#stats {
+  font-size: 9px; letter-spacing: 2px; color: var(--txt-mid);
+  text-transform: uppercase; white-space: nowrap; pointer-events: none;
+}
+
+/* ── CHART AREA ──────────────────────────────────────── */
+#chart-area { position: relative; height: 305px; flex-shrink: 0; }
+#chart-area canvas { position: absolute; top: 0; left: 0; }
+
+/* ── LEYENDA ─────────────────────────────────────────── */
+#leg {
+  display: flex; flex-direction: row; flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 14px; padding: 7px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--bg); flex-shrink: 0; z-index: 5;
+}
+.li { display: flex; align-items: center; gap: 5px; cursor: pointer; transition: opacity .35s; }
+.ld { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.lt { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; }
+
+/* ── CHAPTER (two-column scrollytelling) ───────────── */
+.chapter {
+  display: grid; grid-template-columns: 260px 1fr;
+  border-top: 1px solid var(--border);
+  border-left: 3px solid transparent;
+  transition: border-left-color .5s, background .5s;
+}
+.chapter--active { background: var(--accent-bg); border-left-color: var(--accent) !important; }
+.chapter--active.chapter--time { background: var(--green-bg); border-left-color: var(--green) !important; }
+.chapter-left {
+  position: sticky; top: 420px; align-self: start;
+  padding: 36px 24px; border-right: 1px solid var(--border);
+}
+.chap-num   { font-size: 40px; font-weight: bold; opacity: .07; line-height: 1; color: var(--txt); margin-bottom: 6px; }
+.chap-tag   { font-size: 8px; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 10px; }
+.chap-title { font-size: 20px; font-weight: bold; line-height: 1.2; margin-bottom: 10px; }
+.chap-desc  { font-size: 11px; line-height: 1.8; color: var(--txt-mid); }
+
+.step {
+  min-height: 60vh; padding: 48px 52px;
+  display: flex; flex-direction: column; justify-content: center;
+  border-bottom: 1px solid var(--border);
+  opacity: 0.3; transition: opacity .45s;
+}
+.step.step--active { opacity: 1; }
+.step-eyebrow { font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+                color: var(--txt-dim); margin-bottom: 16px; }
+.step-text  { font-size: 13px; line-height: 1.9; color: var(--txt-mid);
+              max-width: 460px; margin-bottom: 18px; }
+.step-quote { font-size: 12px; line-height: 1.85; font-style: italic;
+              color: var(--txt-hi); border-left: 2px solid var(--accent);
+              padding-left: 14px; margin: 0 0 14px; max-width: 420px; }
+.step-meta  { font-size: 9px; letter-spacing: 1px; color: var(--txt-lo); text-transform: uppercase; }
+
+/* ── PAUSE CHAPTER (full-screen narrative break) ────── */
+.chapter-pause {
+  position: relative; z-index: 11; /* cubre #cw (z-index:10) al hacer scroll */
+  min-height: 100vh; padding: 10vh 8vw;
+  border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; justify-content: center;
+  background: var(--surface); transition: background .5s;
+}
+.pause-eyebrow { font-size: 8px; letter-spacing: 5px; text-transform: uppercase;
+                 color: var(--txt-dim); margin-bottom: 28px; }
+.pause-title   { font-size: clamp(28px, 5vw, 52px); font-weight: bold;
+                 line-height: 1.15; color: var(--txt-hi);
+                 margin-bottom: 32px; max-width: 700px; }
+.pause-body    { font-size: clamp(13px, 1.5vw, 16px); line-height: 2;
+                 color: var(--txt-mid); max-width: 620px; }
+.pause-body p  { margin-bottom: 1.4em; }
+.pause-rule    { width: 40px; height: 2px; background: var(--accent); margin: 40px 0; }
+
+@media (max-width: 700px) {
+  .chapter { grid-template-columns: 1fr; }
+  .chapter-left { position: static; border-right: none;
+                  border-bottom: 1px solid var(--border); padding: 22px 16px; }
+  .step { padding: 32px 20px; min-height: 50vh; }
+}
+
+/* ── HOVER TOOLTIP (pequeño, on-hover) ───────────────── */
+#tooltip {
+  position: fixed; pointer-events: none;
+  background: var(--surface2); border: 1px solid var(--border-hi);
+  padding: 10px 14px; font-size: 10px; line-height: 1.7;
+  max-width: 260px; z-index: 500; opacity: 0;
+  transition: opacity .15s; letter-spacing: .5px;
+}
+#tooltip .t-frase { color: var(--txt-hi); margin-bottom: 4px; font-style: italic; }
+#tooltip .t-meta  { color: var(--txt-lo); font-size: 9px; }
+
+/* ── DOT MODAL (on-click, info completa) ─────────────── */
+#dot-modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55); z-index: 600;
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+#dot-modal-overlay.open { display: flex; }
+#dot-modal {
+  background: var(--surface); border: 1px solid var(--border-hi);
+  max-width: 520px; width: 100%; padding: 24px 28px;
+  position: relative; max-height: 80vh; overflow-y: auto;
+}
+#dot-modal-close {
+  position: absolute; top: 12px; right: 14px;
+  background: none; border: none; color: var(--txt-lo);
+  font-family: 'Courier New', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase;
+  cursor: pointer; transition: color .2s;
+}
+#dot-modal-close:hover { color: var(--txt-hi); }
+#dot-modal-kw {
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 12px;
+}
+#dot-modal-frase {
+  font-size: 13px; line-height: 1.9; color: var(--txt-hi);
+  font-style: italic; margin-bottom: 18px;
+  border-left: 2px solid var(--accent); padding-left: 14px;
+}
+#dot-modal-meta {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px 20px; font-size: 9px; letter-spacing: 1px;
+}
+.dm-row { display: flex; flex-direction: column; gap: 2px; }
+.dm-label { text-transform: uppercase; color: var(--txt-dim); font-size: 8px; letter-spacing: 2px; }
+.dm-val   { color: var(--txt-mid); }
+
+/* ── TAB BAR ─────────────────────────────────────────── */
+#tab-bar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: stretch;
+  background: var(--bg); border-bottom: 1px solid var(--border-hi);
+}
+.tab-btn {
+  flex: 1; padding: 11px 0; text-align: center;
+  font-family: 'Courier New', monospace; font-size: 9px;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--txt-lo); background: none; border: none;
+  cursor: pointer; transition: color .2s, border-bottom .2s;
+  border-bottom: 2px solid transparent;
+}
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── PANELS ──────────────────────────────────────────── */
+#panel-explore { display: block; }
+#panel-query   { display: none; min-height: 100vh; padding: 24px 20px 60px; max-width: 780px; margin: 0 auto; }
+
+/* ── RAG INPUT ───────────────────────────────────────── */
+#rag-form { display: flex; gap: 8px; margin-bottom: 12px; }
+#rag-input {
+  flex: 1; background: var(--surface); border: 1px solid var(--border-hi);
+  color: var(--txt-hi); padding: 10px 14px;
+  font-family: 'Courier New', monospace; font-size: 11px;
+  letter-spacing: .5px; outline: none; transition: border-color .2s;
+}
+#rag-input:focus { border-color: var(--accent); }
+#rag-input::placeholder { color: var(--txt-dim); }
+#rag-btn {
+  background: var(--accent-bg); border: 1px solid var(--accent); color: var(--accent);
+  padding: 10px 18px; font-family: 'Courier New', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  cursor: pointer; white-space: nowrap; transition: background .2s;
+}
+#rag-btn:hover { opacity: .8; }
+#rag-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* ── CHIPS ───────────────────────────────────────────── */
+#rag-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 22px; }
+.chip {
+  background: var(--surface); border: 1px solid var(--border-hi); color: var(--txt-lo);
+  padding: 4px 10px; font-family: 'Courier New', monospace;
+  font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
+  cursor: pointer; transition: color .2s, border-color .2s;
+}
+.chip:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── RAG RESPONSE ────────────────────────────────────── */
+#rag-empty {
+  margin-top: 48px; text-align: center;
+  font-size: 10px; letter-spacing: 2px;
+  color: var(--txt-dim); text-transform: uppercase;
+}
+#rag-spinner { display: none; margin: 48px auto; text-align: center; }
+#rag-answer-wrap { display: none; }
+#rag-answer {
+  font-size: 12px; line-height: 1.9; color: var(--txt-hi);
+  white-space: pre-wrap; margin-bottom: 20px;
+  border-left: 2px solid var(--accent); padding-left: 16px;
+  opacity: 0.9;
+}
+#sources-toggle {
+  background: none; border: none; border-top: 1px solid var(--border);
+  color: var(--txt-lo); font-family: 'Courier New', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  cursor: pointer; padding: 10px 0; display: block; width: 100%;
+  text-align: left; transition: color .2s;
+}
+#sources-toggle:hover { color: var(--txt-mid); }
+#sources-list { display: none; margin-top: 10px; }
+.source-item {
+  border: 1px solid var(--border); padding: 10px 14px;
+  margin-bottom: 8px; font-size: 10px; line-height: 1.7;
+}
+.source-frase { color: var(--txt-mid); font-style: italic; margin-bottom: 5px; }
+.source-meta  { color: var(--txt-lo); font-size: 9px; letter-spacing: .5px; }
+
+/* ── MOBILE ──────────────────────────────────────────── */
+@media (max-width: 600px) {
+  #toolbar { gap: 5px; padding: 7px 10px; }
+  #toolbar-left { gap: 5px; }
+  select { max-width: 120px; font-size: 8px; padding: 4px 7px; }
+  #view-toggle button, #mode-toggle button { font-size: 8px; padding: 4px 6px; letter-spacing: 0.3px; }
+  #stats { display: none; }
+  #klbl  { display: none; }
+  #chart-area { height: 235px; }
+  #cw { top: 62px; }
+  #leg { gap: 4px 10px; padding: 6px 10px; }
+  .lt  { font-size: 8px; }
+  #panel-query { padding: 16px 14px 60px; }
+  #rag-answer  { font-size: 11px; }
+  #dot-modal-meta { grid-template-columns: 1fr; }
+}
+
+body::-webkit-scrollbar { width: 3px; }
+body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div id="loading-text">Cargando datos...</div>
+  <div id="error-msg"></div>
+</div>
+
+<!-- ── TAB BAR ───────────────────────────────────── -->
+<div id="tab-bar">
+  <button class="tab-btn active" data-tab="explore">◈ Explorar</button>
+  <button class="tab-btn"        data-tab="query">⬡ Consultar</button>
+</div>
+
+<!-- ── DOT MODAL ──────────────────────────────────── -->
+<div id="dot-modal-overlay">
+  <div id="dot-modal">
+    <button id="dot-modal-close">cerrar</button>
+    <div id="dot-modal-kw"></div>
+    <div id="dot-modal-frase"></div>
+    <div id="dot-modal-meta">
+      <div class="dm-row"><span class="dm-label">Fecha</span><span class="dm-val" id="dm-fecha"></span></div>
+      <div class="dm-row"><span class="dm-label">Subject</span><span class="dm-val" id="dm-subject"></span></div>
+      <div class="dm-row"><span class="dm-label">Score</span><span class="dm-val" id="dm-score"></span></div>
+      <div class="dm-row"><span class="dm-label">Timestamp</span><span class="dm-val" id="dm-ts"></span></div>
+    </div>
+  </div>
+</div>
+
+<div id="tooltip">
+  <div class="t-frase" id="t-frase"></div>
+  <div class="t-meta"  id="t-meta"></div>
+</div>
+
+<!-- ── PANEL EXPLORAR ────────────────────────────── -->
+<!-- toolbar siempre visible, fuera de panel-explore -->
+<div id="toolbar">
+  <div id="toolbar-left">
+    <select id="topn-sel"><option value="8">Top 8</option></select>
+    <select id="sel"><option value="-1">◈ Todos</option></select>
+    <span id="klbl"></span>
+    <div id="view-toggle">
+      <button id="btn-month" class="active">Meses</button>
+      <button id="btn-day">Días</button>
+    </div>
+    <div id="mode-toggle">
+      <button id="btn-kw" class="active">Keywords</button>
+      <button id="btn-time">Temporal</button>
+    </div>
+  </div>
+  <div id="toolbar-right">
+    <div id="stats"></div>
+  </div>
+</div>
+
+<div id="panel-explore">
+<div id="cw">
+  <div id="chart-area"></div>
+  <div id="leg"></div>
+</div>
+<div id="sections"></div>
+<div style="height: 480px;"></div>
+</div><!-- /panel-explore -->
+
+<!-- ── PANEL CONSULTAR ───────────────────────────── -->
+<div id="panel-query">
+  <div id="rag-form">
+    <input id="rag-input" type="text"
+      placeholder="Busca declaraciones... (ej: qué dijo sobre corrupción)"
+      autocomplete="off" />
+    <button id="rag-btn">Buscar</button>
+  </div>
+
+  <div id="rag-chips">
+    <span class="chip">frases sobre Trump</span>
+    <span class="chip">declaraciones de economía</span>
+    <span class="chip">menciones a fentanilo</span>
+    <span class="chip">declaraciones más relevantes</span>
+  </div>
+
+  <div id="rag-empty">Realiza una consulta para explorar el discurso presidencial</div>
+
+  <div id="rag-spinner">
+    <div class="spinner"></div>
+  </div>
+
+  <div id="rag-answer-wrap">
+    <div id="rag-answer"></div>
+    <button id="sources-toggle">▸ Fuentes consultadas</button>
+    <div id="sources-list"></div>
+  </div>
+</div><!-- /panel-query -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.3/p5.min.js"></script>
+<script>
+/* ══════════════════════════════════════════════════════
+   CONFIG
+   ══════════════════════════════════════════════════════ */
+const WORKER_URL = 'https://nash-api.cvelazquezm.workers.dev/';
+const MAX_KW   = 999;
+const PALETTE  = ['#ff00cc','#00e5a0','#ffaa00','#ff4455','#4499ff','#bb44ff','#ff8844','#00ccff'];
+const MES_ES   = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const SUBJECT_COLORS = {
+  'Desapariciones':    '#ffffff',
+  'Seguridad pública': '#e94649',
+  'Política exterior': '#577691',
+  'Actores políticos': '#43ab8c',
+  'Economía':          '#90bf6d',
+  'Salud':             '#fac74f',
+};
+function hexRgb(h) {
+  return { r:parseInt(h.slice(1,3),16), g:parseInt(h.slice(3,5),16), b:parseInt(h.slice(5,7),16) };
+}
+function palRgb(i) { return hexRgb(PALETTE[i % 8]); }
+function subjectRgb(subject) {
+  return hexRgb(SUBJECT_COLORS[subject] || '#888888');
+}
+const TEXTS = {
+  intro: 'Fragmentos de conferencias de prensa indexados por keyword y fecha. Desplázate para explorar cada tema o filtra desde el dropdown.',
+};
+
+// ── Story beats: puntos específicos a resaltar durante el scroll ──────────
+// Para identificar un punto usa fecha exacta (DD/MM/YYYY) y los primeros
+// ~40 caracteres de la frase. Ambos deben coincidir con el dato en Qdrant.
+// "note" es el texto periodístico que aparece en la sección y en el callout.
+const STORY_BEATS = [
+  {
+    fecha: '01/01/2024',           // ← reemplazar con fecha real (DD/MM/YYYY)
+    frase: 'Lorem ipsum',          // ← primeros chars de la frase real
+    label: 'Declaración clave',
+    note:  'Placeholder: aquí va el análisis periodístico de esta declaración específica. Explica por qué es relevante en el contexto del discurso presidencial.',
+    mode:  'kw',                   // 'kw' | 'time' | 'both'
+  },
+  {
+    fecha: '01/02/2024',
+    frase: 'Lorem ipsum',
+    label: 'Cambio de narrativa',
+    note:  'Placeholder: este fragmento marca un punto de inflexión en el discurso. La comparación con declaraciones anteriores revela un patrón significativo.',
+    mode:  'kw',
+  },
+  {
+    fecha: '01/03/2024',
+    frase: 'Lorem ipsum',
+    label: 'Contexto temporal',
+    note:  'Placeholder: en el contexto del mes, esta declaración adquiere un peso particular. El análisis cronológico muestra una evolución en el tratamiento del tema.',
+    mode:  'time',
+  },
+];
+
+// Pausa narrativa — texto largo que aparece a mitad del scroll
+const PAUSE_KW = {
+  eyebrow: 'Análisis',
+  title:   'El discurso presidencial como documento histórico - EJEMPLO',
+  body: `
+    <p>Placeholder — este es el espacio para una pausa narrativa extensa. Aquí el lector puede detenerse y contextualizar lo que ha visto hasta ahora en la visualización.</p>
+    <p>Las conferencias de prensa matutinas constituyen uno de los corpus más ricos del discurso político contemporáneo en México. Más de mil horas de audio indexadas permiten rastrear la evolución de posiciones, la consistencia de los mensajes y las contradicciones a lo largo del tiempo.</p>
+    <p>Lo que la visualización muestra no es solo frecuencia — muestra densidad temática. Los clusters que se forman en ciertos meses responden a eventos externos: negociaciones comerciales, presiones diplomáticas, crisis sanitarias.</p>
+    <p>Continúa desplazándote para explorar cada tema en detalle.</p>
+  `,
+};
+const PAUSE_TIME = {
+  eyebrow: 'Cronología',
+  title:   'Doce meses de agenda pública',
+  body: `
+    <p>Placeholder — pausa en el modo temporal. El recorrido mes a mes revela algo que los titulares no capturan: la acumulación.</p>
+    <p>Cada punto en la visualización es una declaración transcrita, clasificada y puntuada. El volumen importa tanto como el contenido: la densidad de menciones en ciertos periodos señala dónde estaba la atención del gobierno.</p>
+    <p>Los meses de menor actividad son tan reveladores como los de mayor densidad. La ausencia también es un dato.</p>
+    <p>Continúa para explorar el detalle mes a mes.</p>
+  `,
+};
+
+/* ══════════════════════════════════════════════════════
+   CARGA — detecta formato nuevo {kw,mo,...} o viejo array
+   ══════════════════════════════════════════════════════ */
+function makeRng(seed) {
+  let s = seed|0;
+  return () => {
+    s = (s+0x6D2B79F5)|0;
+    let t = Math.imul(s^s>>>15,1|s);
+    t = (t+Math.imul(t^t>>>7,61|t))^t;
+    return ((t^t>>>14)>>>0)/4294967296;
+  };
+}
+
+function normalizeOldFormat(arr) {
+  // arr: [{keyword, fecha, subject, score, frase}, ...]
+  const kwCount = {};
+  arr.forEach(p => { const k=p.keyword; if(k) kwCount[k]=(kwCount[k]||0)+1; });
+  const KW = Object.entries(kwCount).sort((a,b)=>b[1]-a[1]).slice(0,MAX_KW).map(([k])=>k);
+  const kwIdx = Object.fromEntries(KW.map((k,i)=>[k,i]));
+
+  const moSet = new Set();
+  arr.forEach(p => {
+    const pts = (p.fecha||'').split('/');
+    if (pts.length===3) moSet.add(`${pts[2]}-${pts[1].padStart(2,'0')}`);
+  });
+  const moKeys  = [...moSet].sort();
+  const moLabel = moKeys.map(k => { const [y,m]=k.split('-'); return `${MES_ES[+m-1]} ${y.slice(2)}`; });
+  const moIdx   = Object.fromEntries(moKeys.map((k,i)=>[k,i]));
+
+  const daySet = new Set();
+  arr.forEach(p => {
+    const pts=(p.fecha||'').split('/');
+    if(pts.length===3){ const ms=Date.UTC(+pts[2],+pts[1]-1,+pts[0]); daySet.add(ms); }
+  });
+  const dayMs = [...daySet].sort((a,b)=>a-b);
+
+  const rng  = makeRng(42);
+  const dots = []; const kwN = new Array(KW.length).fill(0);
+  arr.forEach(p => {
+    const ki = kwIdx[p.keyword]; if(ki===undefined){ rng(); rng(); return; }
+    const pts=(p.fecha||'').split('/'); if(pts.length<3){ rng(); rng(); return; }
+    const moKey=`${pts[2]}-${pts[1].padStart(2,'0')}`;
+    const mi=moIdx[moKey]; if(mi===undefined){ rng(); rng(); return; }
+    const ms=Date.UTC(+pts[2],+pts[1]-1,+pts[0]);
+    const rx=rng()-.5, ry=rng();
+    kwN[ki]++;
+    dots.push([ki, mi, ms, +rx.toFixed(4), +ry.toFixed(4),
+      +(p.score||0), p.subject||'', (p.frase||'').slice(0,160)]);
+  });
+
+  return { kw: KW, kwN, mo: moLabel, dayMs, dots };
+}
+
+async function loadData() {
+  const res = await fetch(`${WORKER_URL}/data`);
+  if (!res.ok) throw new Error(`Error al obtener datos del servidor (${res.status})`);
+  return res.json();
+}
+
+/* ══════════════════════════════════════════════════════
+   PROCESAMIENTO (mínimo — datos ya vienen pre-calculados)
+   ══════════════════════════════════════════════════════ */
+function utcMsToFecha(ms) {
+  const d = new Date(ms);
+  return `${String(d.getUTCDate()).padStart(2,'0')}/${String(d.getUTCMonth()+1).padStart(2,'0')}/${d.getUTCFullYear()}`;
+}
+
+function processData({ kw, kwN, mo, dayMs, dots: raw }) {
+  const KW       = kw;
+  const MO_LABEL = mo;
+  const DAY_KEYS = dayMs.map(ms => new Date(ms));
+
+  // Map raw arrays → dot objects. rx/ry/ki/mi ya vienen pre-calculados.
+  const dots = raw.map((d, id) => ({
+    id,
+    ki: d[0], mi: d[1],
+    dateObj: new Date(d[2]),
+    rx: d[3], ry: d[4],
+    score: d[5], subject: d[6], frase: d[7],
+    fecha: utcMsToFecha(d[2]),
+    storyIdx: -1,               // índice en STORY_BEATS si hay match
+    cx: 0, cy: 0, tx: 0, ty: 0,
+    alpha: 0, targetAlpha: 0,
+  }));
+
+  // Matching de story beats → dots
+  STORY_BEATS.forEach((beat, bi) => {
+    const snippet = beat.frase.trim().slice(0, 40).toLowerCase();
+    const match = dots.find(d =>
+      d.fecha === beat.fecha &&
+      d.frase.toLowerCase().includes(snippet)
+    );
+    if (match) match.storyIdx = bi;
+  });
+
+  // SECS modo keyword — pausa después del 3er keyword, beats al final
+  const kwBeats = STORY_BEATS
+    .map((b, i) => ({ ...b, beatIdx: i }))
+    .filter(b => b.mode === 'kw' || b.mode === 'both');
+  const kwSecs = KW.map((k, i) => ({
+    type: 'kw', kw: i, tag:`${kwN[i]} fragmentos`,
+    title: k.charAt(0).toUpperCase()+k.slice(1),
+    body: TEXTS[k] || 'Lorem ipsum dolor sit amet consectetur adipiscing elit.',
+  }));
+  // Insertar pausa después del índice 2 (3er keyword) si hay al menos 3 keywords
+  const pauseInsertKw = Math.min(2, kwSecs.length - 1);
+  const SECS = [
+    { type:'kw', kw:-1, tag:'Panorama general', title:'Nash — Análisis de discurso', body: TEXTS.intro },
+    ...kwSecs.slice(0, pauseInsertKw + 1),
+    { type:'pause', ...PAUSE_KW },
+    ...kwSecs.slice(pauseInsertKw + 1),
+    ...kwBeats.map(b => ({ type:'beat', beatIdx: b.beatIdx, kw:-1, ...b })),
+  ];
+
+  // SECS_TIME — pausa después del 2do mes
+  const timeBeats = STORY_BEATS
+    .map((b, i) => ({ ...b, beatIdx: i }))
+    .filter(b => b.mode === 'time' || b.mode === 'both');
+  const moSecs = MO_LABEL.map((lbl, i) => ({ type:'mo', mo: i, tag: lbl, title: lbl }));
+  const pauseInsertTime = Math.min(1, moSecs.length - 1);
+  const SECS_TIME_BUILT = [
+    { type:'mo', mo:-1, tag:'Panorama general', title:'Nash — Línea de tiempo',
+      body:'Todos los fragmentos ordenados cronológicamente.' },
+    ...moSecs.slice(0, pauseInsertTime + 1),
+    { type:'pause', ...PAUSE_TIME },
+    ...moSecs.slice(pauseInsertTime + 1),
+    ...timeBeats.map(b => ({ type:'beat', beatIdx: b.beatIdx, mo:-1, ...b })),
+  ];
+
+  return { KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT };
+}
+
+/* ══════════════════════════════════════════════════════
+   VIZ
+   ══════════════════════════════════════════════════════ */
+function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
+  function CL(i) { return PALETTE[i % 8]; }
+  const cwEl     = document.getElementById('cw');
+  const chartEl  = document.getElementById('chart-area');
+  let viewMode   = 'month';
+  let navMode    = 'kw';
+  let curKw      = -99;
+  let curMo      = -99;
+  let dayStackMo         = -1;
+  let _dayAxisParams     = null;
+  let activeStory        = -1;   // índice STORY_BEATS activo (-1 = ninguno)
+  let stepObserver       = null; // IntersectionObserver para steps
+  let curChapterSecIdx   = -1;   // secIdx del chapter activo (evita re-animación dentro del mismo chapter)
+  let pauseObserver      = null; // IntersectionObserver para pausas
+  let topNFilter         = 8;    // cuántos keywords mostrar (por frecuencia desc)
+  const M      = { top:12, right:14, bottom:36, left:10 };
+
+  const SECS_TIME = SECS_TIME_BUILT;
+
+  /* ── Render secciones ────────────────────────────── */
+  const secEl = document.getElementById('sections');
+
+  /* Genera 3 steps con referencias a dots reales */
+  function makeStepsForSection(sType, sKw, sMo) {
+    const relevant = sType === 'mo'
+      ? (sMo >= 0 ? dots.filter(d => d.mi === sMo) : dots)
+      : (sKw >= 0 ? dots.filter(d => d.ki === sKw) : dots);
+    if (!relevant.length) return [{ num:'01', text:'Sin fragmentos disponibles.', dotId:null, quote:null, meta:null }];
+
+    const top    = [...relevant].sort((a,b) => b.score - a.score)[0];
+    const others = relevant.filter(d => d.id !== top?.id);
+    const recent = others.sort((a,b) => b.dateObj - a.dateObj)[0] ?? null;
+    const kwLbl  = sKw >= 0 ? KW[sKw] : null;
+    const moLbl  = sMo >= 0 ? MO_LABEL[sMo] : null;
+
+    const t1 = sType === 'mo'
+      ? `Durante <strong>${moLbl || 'el período'}</strong> se registraron <strong>${relevant.length} fragmentos</strong> de relevancia. El desglose por día revela la distribución de la actividad discursiva en el mes.`
+      : kwLbl
+      ? `Los <strong>${relevant.length} fragmentos</strong> registrados sobre <em>${kwLbl}</em> permiten trazar la evolución del tema en el discurso presidencial. Cada punto representa una declaración transcrita e indexada.`
+      : `El corpus completo contiene <strong>${relevant.length} fragmentos</strong> de conferencias de prensa, organizados por tema y fecha. Desplázate para explorar cada categoría.`;
+
+    const t2 = top
+      ? `El fragmento de mayor relevancia (puntuación <strong>${top.score}/3</strong>) captura un momento de alta densidad argumentativa. Fecha y contexto son clave para la interpretación del discurso.`
+      : `Los fragmentos de mayor puntuación concentran las declaraciones con mayor peso argumentativo del período.`;
+
+    const t3 = recent
+      ? `La declaración registrada el <strong>${recent.fecha}</strong> permite observar la evolución narrativa. La comparación entre registros tempranos y recientes revela continuidades y rupturas discursivas.`
+      : `La distribución cronológica permite identificar ciclos de atención y momentos de mayor densidad en el discurso presidencial.`;
+
+    return [
+      { num:'01', text:t1, dotId:null, quote:null, meta:null },
+      { num:'02', text:t2,
+        dotId: top?.id ?? null,
+        quote: top ? `"${top.frase.slice(0,130)}${top.frase.length>130?'…':''}"` : null,
+        meta:  top ? `${top.fecha} · ${top.subject}` : null },
+      { num:'03', text:t3,
+        dotId: recent?.id ?? null,
+        quote: recent ? `"${recent.frase.slice(0,130)}${recent.frase.length>130?'…':''}"` : null,
+        meta:  recent ? `${recent.fecha} · ${recent.subject}` : null },
+    ];
+  }
+
+  function renderSections() {
+    secEl.innerHTML = '';
+    // En modo kw filtrar secciones según topNFilter (excluir keywords fuera del top N)
+    const baseList = navMode === 'kw' ? SECS : SECS_TIME;
+    const list = navMode === 'kw'
+      ? baseList.filter(s => s.type !== 'kw' || s.kw === -1 || s.kw < topNFilter)
+      : baseList;
+    const isTime = navMode === 'time';
+    let chapN = 0;
+
+    list.forEach((s, secIdx) => {
+      let el;
+
+      if (s.type === 'pause') {
+        el = document.createElement('div');
+        el.className = 'chapter-pause';
+        el.dataset.secIdx = secIdx;
+        el.innerHTML = `
+          <div class="pause-eyebrow">${s.eyebrow || ''}</div>
+          <div class="pause-title">${s.title}</div>
+          <div class="pause-rule"></div>
+          <div class="pause-body">${s.body}</div>`;
+
+      } else {
+        chapN++;
+        const dispNum = String(chapN).padStart(2, '0');
+        const isBeat  = s.type === 'beat';
+
+        // Accent color for this chapter
+        let c;
+        if (isTime)       c = '#00e5a0';
+        else if (s.kw>=0) c = CL(s.kw);
+        else              c = '#ffffff';
+
+        el = document.createElement('div');
+        el.className = 'chapter' + (isTime ? ' chapter--time' : '');
+        el.dataset.secIdx = secIdx;
+        el.dataset.type   = s.type;
+        if (s.kw !== undefined) el.dataset.kw = s.kw;
+        if (s.mo !== undefined) el.dataset.mo = s.mo;
+        el.style.borderLeftColor = `${c}44`;
+
+        // LEFT COLUMN
+        let leftHtml;
+        if (isBeat) {
+          const beat = STORY_BEATS[s.beatIdx];
+          leftHtml = `
+            <div class="chap-num">${dispNum}</div>
+            <div class="chap-tag" style="color:${c}">Declaración destacada</div>
+            <div class="chap-title" style="color:${c}">${beat?.label || ''}</div>
+            <div class="chap-desc">${beat?.note || ''}</div>`;
+        } else {
+          leftHtml = `
+            <div class="chap-num">${dispNum}</div>
+            <div class="chap-tag" style="color:${c}">${s.tag || ''}</div>
+            <div class="chap-title" style="color:${c}">${s.title || ''}</div>
+            <div class="chap-desc">${s.body || ''}</div>`;
+        }
+
+        // RIGHT COLUMN — steps
+        let stepsHtml;
+        if (isBeat) {
+          const beat    = STORY_BEATS[s.beatIdx];
+          const beatDot = beat ? dots.find(d => d.storyIdx === s.beatIdx) : null;
+          stepsHtml = `<div class="step" data-sec-idx="${secIdx}" data-dot-id="${beatDot?.id ?? -1}">
+            <div class="step-eyebrow">Declaración destacada</div>
+            <div class="step-text">${beat?.note || ''}</div>
+            ${beatDot ? `<blockquote class="step-quote">"${beatDot.frase.slice(0,130)}${beatDot.frase.length>130?'…':''}"</blockquote>` : ''}
+            <div class="step-meta">${beat?.fecha || ''}</div>
+          </div>`;
+        } else {
+          const steps = makeStepsForSection(s.type, s.kw ?? -1, s.mo ?? -1);
+          stepsHtml = steps.map(st => `
+            <div class="step" data-sec-idx="${secIdx}" data-dot-id="${st.dotId ?? -1}">
+              <div class="step-eyebrow">${st.num}</div>
+              <div class="step-text">${st.text}</div>
+              ${st.quote ? `<blockquote class="step-quote">${st.quote}</blockquote>` : ''}
+              ${st.meta  ? `<div class="step-meta">${st.meta}</div>` : ''}
+            </div>`).join('');
+        }
+
+        el.innerHTML = `
+          <div class="chapter-left">${leftHtml}</div>
+          <div class="chapter-right">${stepsHtml}</div>`;
+      }
+
+      el.dataset.secIdx = secIdx;
+      secEl.appendChild(el);
+    });
+
+    setupStepObserver();
+  }
+
+  renderSections();
+
+  /* ── Leyenda + Dropdowns ─────────────────────────── */
+  const leg    = document.getElementById('leg');
+  const sel    = document.getElementById('sel');
+  const topnEl = document.getElementById('topn-sel');
+
+  // Construir #topn-sel dinámicamente con las opciones reales
+  topnEl.innerHTML = '';
+  // Opciones: Todos, luego cada keyword individual como "Top N"
+  const allOpt = document.createElement('option');
+  allOpt.value = KW.length; allOpt.textContent = `Todos (${KW.length})`;
+  topnEl.appendChild(allOpt);
+  // Opciones fijas de corte: 3, 5, 8, 10, 15, 20 — solo las que tengan sentido
+  [3, 5, 8, 10, 15, 20].filter(n => n < KW.length).forEach(n => {
+    const o = document.createElement('option');
+    o.value = n; o.textContent = `Top ${n}`;
+    topnEl.appendChild(o);
+  });
+  topnEl.value = Math.min(8, KW.length); // default top 8
+  topNFilter   = parseInt(topnEl.value);
+
+  // Construir #sel (keyword individual) — se reconstruye al cambiar topN
+  function buildKwSelect() {
+    const prev = parseInt(sel.value);
+    sel.innerHTML = '<option value="-1">◈ Todos</option>';
+    KW.slice(0, topNFilter).forEach((kw, i) => {
+      const o = document.createElement('option');
+      o.value = i; o.textContent = `● ${kw}`;
+      sel.appendChild(o);
+    });
+    sel.value = (prev >= 0 && prev < topNFilter) ? prev : -1;
+  }
+  buildKwSelect();
+
+  function renderLegend() {
+    leg.innerHTML = '';
+    KW.slice(0, topNFilter).forEach((kw, i) => {
+      const li = document.createElement('div');
+      li.className='li'; li.id=`li${i}`;
+      li.innerHTML=`<div class="ld" style="background:${CL(i)}"></div><span class="lt" style="color:${CL(i)}">${kw}</span>`;
+      li.onclick = () => { sel.value=i; applyFilter(i); };
+      leg.appendChild(li);
+    });
+  }
+  renderLegend();
+
+  function updateLegVisibility() {
+    leg.style.display  = '';
+    const showKw = navMode === 'kw';
+    sel.style.display    = showKw ? '' : 'none';
+    topnEl.style.display = showKw ? '' : 'none';
+    document.getElementById('klbl').style.display = showKw ? '' : 'none';
+  }
+
+  function updateStats() {
+    const visible = dots.filter(d => okKw(d)).length;
+    const lbl = viewMode==='month' ? `${MO_LABEL.length} meses` : `${DAY_KEYS.length} días`;
+    document.getElementById('stats').textContent = `${visible.toLocaleString()} / ${dots.length.toLocaleString()} · ${lbl}`;
+  }
+  updateStats();
+
+  /* ── Tooltip hover ───────────────────────────────── */
+  const tip = document.getElementById('tooltip');
+  function showTip(d, sx, sy) {
+    document.getElementById('t-frase').textContent = `"${d.frase.slice(0,100)}${d.frase.length>100?'...':''}"`;
+    document.getElementById('t-meta').textContent  = `${d.fecha} · ${d.subject}`;
+    tip.style.left    = `${Math.min(sx+14, window.innerWidth-280)}px`;
+    tip.style.top     = `${sy-60}px`;
+    tip.style.opacity = 1;
+  }
+  function hideTip() { tip.style.opacity=0; }
+
+  /* ── Modal al click ──────────────────────────────── */
+  const modalOverlay = document.getElementById('dot-modal-overlay');
+  function openModal(d) {
+    hideTip();
+    document.getElementById('dot-modal-kw').textContent     = d.subject || '';
+    document.getElementById('dot-modal-frase').textContent  = `"${d.frase}"`;
+    document.getElementById('dm-fecha').textContent         = d.fecha;
+    document.getElementById('dm-subject').textContent       = d.subject;
+    document.getElementById('dm-score').textContent         = d.score;
+    document.getElementById('dm-ts').textContent            = d.min_sec || '—';
+    modalOverlay.classList.add('open');
+  }
+  document.getElementById('dot-modal-close').addEventListener('click', () => modalOverlay.classList.remove('open'));
+  modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) modalOverlay.classList.remove('open'); });
+
+  /* ── Scale helpers ───────────────────────────────── */
+  function computeTargets(W, H) {
+    if (viewMode === 'month') {
+      const bw = (W - M.left - M.right) / MO_LABEL.length;
+      dots.forEach(d => {
+        d.tx = M.left + d.mi * bw + bw/2 + d.rx * bw * .58;
+        d.ty = M.top + 4 + d.ry * (H - M.top - M.bottom - 8);
+      });
+    } else {
+      const t0 = DAY_KEYS[0].getTime(), t1 = DAY_KEYS[DAY_KEYS.length-1].getTime();
+      const span = t1 - t0 || 1;
+      const xL = M.left+28, xR = W-M.right-28;
+      dots.forEach(d => {
+        d.tx = xL + (d.dateObj.getTime()-t0)/span*(xR-xL) + d.rx*3;
+        d.ty = M.top + 4 + d.ry * (H - M.top - M.bottom - 8);
+      });
+    }
+  }
+
+  function computeTargetsDayStack(mo) {
+    const W = chartEl.clientWidth, H = chartEl.clientHeight;
+    const MB = 48; // margen bottom extra para etiquetas
+
+    // Agrupar dots del mes por día
+    const byDay = {};
+    dots.forEach(d => {
+      if (d.mi !== mo) return;
+      const day = d.dateObj.getUTCDate();
+      if (!byDay[day]) byDay[day] = [];
+      byDay[day].push(d);
+    });
+    Object.values(byDay).forEach(arr => arr.sort((a, b) => a.dateObj - b.dateObj));
+
+    // Días reales del mes (1–daysInMonth)
+    const sampleDot = dots.find(d => d.mi === mo);
+    const daysInMonth = sampleDot
+      ? new Date(sampleDot.dateObj.getUTCFullYear(), sampleDot.dateObj.getUTCMonth() + 1, 0).getUTCDate()
+      : 31;
+
+    const bw         = (W - M.left - M.right) / daysInMonth;
+    const maxStack   = Math.max(...Object.values(byDay).map(a => a.length), 1);
+    const availH     = H - M.top - MB - 6;
+    const dotSpacing = Math.min(availH / maxStack, 14);
+    const stackBottom = H - MB - 2;
+
+    dots.forEach(d => {
+      if (d.mi !== mo) return;
+      const day   = d.dateObj.getUTCDate();
+      const group = byDay[day];
+      const idx   = group.indexOf(d);
+      d.tx = M.left + (day - 0.5) * bw;
+      d.ty = stackBottom - idx * dotSpacing;
+    });
+    // Guardar para que drawDayAxis use los mismos parámetros
+    _dayAxisParams = { daysInMonth, bw: bw, MB };
+  }
+
+  function monthRange(start, end) {
+    const months=[], cur=new Date(start.getUTCFullYear(), start.getUTCMonth(), 1);
+    const last=new Date(end.getUTCFullYear(), end.getUTCMonth(), 1);
+    while(cur<=last){ months.push(new Date(cur)); cur.setMonth(cur.getMonth()+1); }
+    return months;
+  }
+
+  /* ══════════════════════════════════════════════════
+     p5 SKETCH
+     ══════════════════════════════════════════════════ */
+  const NUM_PT = 55;
+
+  new p5(p => {
+    // p5 opera sobre chartEl, no sobre cwEl
+
+    /* ── Partículas decorativas ────────────────────── */
+    class Particle {
+      reset(W, H, scatter) {
+        this.x    = scatter ? Math.random()*W : (Math.random()<.5 ? -2 : W+2);
+        this.y    = Math.random()*H;
+        this.vx   = (Math.random()-.5)*.3;
+        this.vy   = (Math.random()-.5)*.22;
+        this.r    = Math.random()*1.1+.3;
+        this.ki   = Math.floor(Math.random()*KW.length);
+        this.base = Math.random()*22+5;
+        this.life = Math.random()*500+200;
+        this.age  = 0;
+      }
+      constructor(W, H) { this.reset(W, H, true); }
+      update(W, H) {
+        this.x+=this.vx; this.y+=this.vy; this.age++;
+        if (this.age>this.life) this.reset(W, H, false);
+      }
+    }
+
+    let particles=[], W, H, DR;
+    let hoveredDot = null;
+
+    p.setup = () => {
+      const cnv = p.createCanvas(chartEl.clientWidth, chartEl.clientHeight);
+      cnv.style('position','absolute'); cnv.style('top','0'); cnv.style('left','0');
+      p.pixelDensity(Math.min(window.devicePixelRatio, 2));
+      p.frameRate(30);
+      W=p.width; H=p.height; DR=dotRadius(W);
+      for (let i=0; i<NUM_PT; i++) particles.push(new Particle(W, H));
+      computeTargets(W, H);
+      // Entrada: cada dot cae desde arriba en diagonal hacia su posición
+      dots.forEach(d => {
+        const offsetX = (d.tx - W * 0.5) * 0.7;
+        d.cx = d.tx + offsetX + (Math.random()-0.5)*30;
+        d.cy = -H * 0.15 - Math.random()*H*0.2;
+        d.alpha = 0;
+        d.delay = Math.floor(Math.random()*55);
+      });
+    };
+
+    function dotRadius(W) { return Math.max(2.2, Math.min(4, W/310)); }
+    function dotRadiusForScore(base, score) {
+      if (score >= 2) return base;          // score 2 — tamaño completo
+      if (score >= 1) return base * 0.70;   // score 1 — mediano
+      return base * 0.45;                   // score 0 — pequeño
+    }
+
+    /* ── Glow sutil: solo en keyword activo ─ */
+    function drawGlowDot(x, y, r, rgb, alpha, glowing) {
+      if (glowing) {
+        p.fill(rgb.r, rgb.g, rgb.b, alpha * 0.18);
+        p.circle(x, y, r * 3.2);
+      }
+      p.fill(rgb.r, rgb.g, rgb.b, alpha);
+      p.circle(x, y, r * 2);
+    }
+
+    /* ── Eje días+semanas (temporal detalle) ────────── */
+    function drawDayAxis() {
+      if (!_dayAxisParams) return;
+      const { daysInMonth, bw, MB } = _dayAxisParams;
+      p.noStroke();
+      p.textFont('Courier New');
+      p.textSize(Math.max(9, Math.min(11, W / 80)));
+      const [tr,tg,tb] = p5txt();
+      const chartBottom = H - MB;
+
+      // Semanas: bloques de 7 días
+      let w = 0;
+      for (let d0 = 1; d0 <= daysInMonth; d0 += 7, w++) {
+        const d1  = Math.min(d0 + 6, daysInMonth);
+        const x0  = M.left + (d0 - 1) * bw;
+        const x1  = M.left + d1 * bw;
+        const mid = (x0 + x1) / 2;
+
+        // Banda alternada
+        if (w % 2 === 0) {
+          p.fill(tr, tg, tb, 9);
+          p.rect(x0, M.top, x1 - x0, chartBottom - M.top);
+        }
+
+        // Separador vertical al inicio de semana (excepto la primera)
+        if (d0 > 1) {
+          p.stroke(tr, tg, tb, 35); p.strokeWeight(1);
+          p.line(x0, M.top, x0, chartBottom);
+          p.noStroke();
+        }
+
+        // Rango de días ej. "1-7", "8-14"
+        p.fill(tr, tg, tb, 210);
+        p.textAlign(p.CENTER);
+        p.text(`${d0}–${d1}`, mid, chartBottom + 16);
+
+        // Línea de delimitación inferior para esa semana
+        p.stroke(tr, tg, tb, 18); p.strokeWeight(1);
+        p.line(x0, chartBottom, x1, chartBottom);
+        p.noStroke();
+      }
+
+      // Línea base
+      p.stroke(tr, tg, tb, 40); p.strokeWeight(1);
+      p.line(M.left, chartBottom, W - M.right, chartBottom);
+      p.noStroke();
+    }
+
+    /* ── Eje X ───────────────────────────────────────── */
+    function drawAxis() {
+      if (dayStackMo >= 0) { drawDayAxis(); return; }
+      p.noStroke();
+      p.textFont('Courier New');
+      p.textSize(Math.max(7.5, Math.min(10, W/170)));
+      const [tr,tg,tb] = p5txt();
+
+      if (viewMode === 'month') {
+        const bw = (W - M.left - M.right) / MO_LABEL.length;
+        for (let i=0; i<MO_LABEL.length; i++) {
+          const x = M.left + i*bw;
+          if (i%2===0) { p.fill(tr,tg,tb,6); p.rect(x, M.top, bw, H-M.top-M.bottom); }
+          p.fill(tr,tg,tb,210); p.textAlign(p.CENTER);
+          p.text(MO_LABEL[i], x+bw/2, H-M.bottom+14);
+        }
+      } else {
+        const t0=DAY_KEYS[0].getTime(), t1=DAY_KEYS[DAY_KEYS.length-1].getTime(), span=t1-t0||1;
+        const xL=M.left+28, xR=W-M.right-28;
+        const months = monthRange(DAY_KEYS[0], DAY_KEYS[DAY_KEYS.length-1]);
+        months.forEach((mo, i) => {
+          const x = xL + (mo.getTime()-t0)/span*(xR-xL);
+          if (i%2===0 && i+1<months.length) {
+            const xn = xL + (months[i+1].getTime()-t0)/span*(xR-xL);
+            p.fill(tr,tg,tb,6); p.rect(x, M.top, xn-x, H-M.top-M.bottom);
+          }
+          if (x>M.left+8 && x<W-M.right-8) {
+            p.stroke(tr,tg,tb,20); p.strokeWeight(1);
+            p.line(x, M.top, x, H-M.bottom); p.noStroke();
+          }
+          p.fill(tr,tg,tb,210); p.textAlign(p.LEFT);
+          p.text(`${MES_ES[mo.getMonth()]} ${String(mo.getFullYear()).slice(2)}`, x+4, H-M.bottom+14);
+        });
+      }
+    }
+
+    /* ── Dots ───────────────────────────────────────── */
+    let settled = false;
+    // glowing = hay un keyword seleccionado (no "todos")
+    let activeKwForGlow = -1;
+
+    function drawDots() {
+      p.noStroke();
+      let moving = false;
+
+      dots.forEach(d => {
+        // Stagger de entrada/scatter: esperar delay frames antes de moverse
+        if (d.delay > 0) { d.delay--; moving = true; return; }
+
+        const dxAbs = Math.abs(d.cx-d.tx), dyAbs = Math.abs(d.cy-d.ty), daAbs = Math.abs(d.alpha-d.targetAlpha);
+        if (dxAbs>0.35 || dyAbs>0.35 || daAbs>0.5) {
+          // Lerp más lento para dots en background (suavidad), rápido para activos
+          const spd = d.targetAlpha > 50 ? 0.062 : 0.045;
+          d.cx    += (d.tx-d.cx)*spd;
+          d.cy    += (d.ty-d.cy)*spd;
+          d.alpha += (d.targetAlpha-d.alpha)*0.08;
+          moving   = true;
+        } else {
+          d.cx=d.tx; d.cy=d.ty; d.alpha=d.targetAlpha;
+        }
+
+        if (d.alpha < 1) return;
+
+        // Glow solo en dots del keyword activo, no en "mostrar todos"
+        const glowing = activeKwForGlow >= 0 && d.ki === activeKwForGlow;
+        const r = dotRadiusForScore(DR, d.score);
+        drawGlowDot(d.cx, d.cy, r, subjectRgb(d.subject), d.alpha, glowing);
+      });
+
+      settled = !moving;
+    }
+
+    /* ── Partículas ─────────────────────────────────── */
+    function drawParticles() {
+      p.noStroke();
+      const byKi = Array.from({length: KW.length}, () => []);
+      particles.forEach(pt => { pt.update(W, H); byKi[pt.ki].push(pt); });
+      byKi.forEach((group, ki) => {
+        if (!group.length) return;
+        const rgb = palRgb(ki);
+        group.forEach(pt => {
+          const fade = pt.age<30 ? pt.age/30 : pt.age>pt.life-30 ? (pt.life-pt.age)/30 : 1;
+          p.fill(rgb.r, rgb.g, rgb.b, pt.base*fade);
+          p.circle(pt.x, pt.y, pt.r*2);
+        });
+      });
+    }
+
+    /* ── Hover ──────────────────────────────────────── */
+    function exploreVisible() {
+      return document.getElementById('panel-explore').style.display !== 'none';
+    }
+    p.mouseMoved = () => {
+      if (!exploreVisible()) { hideTip(); return; }
+      if (p.mouseY<0||p.mouseY>H||p.mouseX<0||p.mouseX>W) { hideTip(); return; }
+      const rect = chartEl.getBoundingClientRect();
+      let best=null, bestD=12;
+      for (const d of dots) {
+        if (d.targetAlpha<100) continue;
+        const dist=Math.hypot(p.mouseX-d.cx, p.mouseY-d.cy);
+        if (dist<bestD) { bestD=dist; best=d; }
+      }
+      if (best!==hoveredDot) {
+        hoveredDot=best;
+        if (best) showTip(best, p.mouseX+rect.left, p.mouseY+rect.top);
+        else hideTip();
+      }
+    };
+    p.mouseOut = hideTip;
+
+    /* ── Click — abrir modal ────────────────────────── */
+    p.mousePressed = () => {
+      if (!exploreVisible()) return;
+      if (p.mouseY<0||p.mouseY>H||p.mouseX<0||p.mouseX>W) return;
+      let best=null, bestD=14;
+      for (const d of dots) {
+        if (d.targetAlpha<100) continue;
+        const dist=Math.hypot(p.mouseX-d.cx, p.mouseY-d.cy);
+        if (dist<bestD) { bestD=dist; best=d; }
+      }
+      if (best) openModal(best);
+    };
+
+    /* ── draw loop ──────────────────────────────────── */
+    function cssVar(name, fallback) {
+      const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      return v !== '' ? +v : fallback;
+    }
+    function p5bg()  { return [cssVar('--p5-bg-r',7),  cssVar('--p5-bg-g',0),   cssVar('--p5-bg-b',26)]; }
+    function p5txt() { return [cssVar('--p5-txt-r',255), cssVar('--p5-txt-g',255), cssVar('--p5-txt-b',255)]; }
+
+    /* ── Highlight: anillo pulsante en el dot activo ── */
+    function drawHighlight() {
+      if (highlightId < 0) return;
+      const d = dots.find(dot => dot.id === highlightId);
+      if (!d || d.alpha < 10) return;
+      const rgb   = subjectRgb(d.subject);
+      const pulse = 0.5 + 0.5 * Math.sin(p.frameCount * 0.08);
+      const [tr,tg,tb] = p5txt();
+
+      // Anillo exterior pulsante
+      p.noFill(); p.strokeWeight(1.5);
+      p.stroke(rgb.r, rgb.g, rgb.b, 180 * pulse);
+      p.circle(d.cx, d.cy, (DR * 2 + 8 + 6 * pulse) * 2);
+      // Anillo interior fijo
+      p.stroke(rgb.r, rgb.g, rgb.b, 220);
+      p.circle(d.cx, d.cy, (DR + 4) * 2);
+      p.noStroke();
+
+      // Línea guía + etiqueta
+      const goRight = d.cx < W * 0.6;
+      const lx = goRight ? d.cx + 18 : d.cx - 18;
+      const ly = d.cy - 22;
+      const ex = goRight ? Math.min(lx + 80, W - 10) : Math.max(lx - 80, 10);
+      p.stroke(rgb.r, rgb.g, rgb.b, 120); p.strokeWeight(1);
+      p.line(d.cx, d.cy - DR - 3, lx, ly);
+      p.line(lx, ly, ex, ly);
+      p.noStroke();
+      p.textFont('Courier New'); p.textSize(8);
+      p.textAlign(goRight ? p.LEFT : p.RIGHT);
+      p.fill(rgb.r, rgb.g, rgb.b, 220);
+      p.text(d.subject.slice(0,22), goRight ? lx+4 : lx-4, ly-4);
+      p.fill(tr, tg, tb, 120);
+      p.text(d.fecha, goRight ? lx+4 : lx-4, ly+9);
+      p.noStroke();
+      settled = false; // mantener animando
+    }
+
+    p.draw = () => {
+      p.background(...p5bg());
+      drawAxis();
+      drawParticles();
+      drawDots();
+      drawHighlight();
+      if (settled) p.frameRate(10);
+      else          p.frameRate(30);
+    };
+
+    p.windowResized = () => {
+      W=chartEl.clientWidth; H=chartEl.clientHeight;
+      p.resizeCanvas(W, H);
+      DR=dotRadius(W);
+      if (dayStackMo >= 0) computeTargetsDayStack(dayStackMo);
+      else computeTargets(W, H);
+      settled=false; p.frameRate(30);
+    };
+
+    chartEl._wake = (kwForGlow) => {
+      activeKwForGlow = kwForGlow !== undefined ? kwForGlow : activeKwForGlow;
+      settled=false; p.frameRate(30);
+    };
+
+    let highlightId = -1; // id del dot actualmente en callout (-1 = ninguno)
+    chartEl._setHighlight = (id) => {
+      highlightId = id ?? -1;
+      settled = false;
+      p.frameRate(30);
+    };
+
+  }, chartEl);
+
+  /* ── Helper topN ─────────────────────────────────── */
+  function okKw(d) { return d.ki < topNFilter; } // ki ya viene ordenado por frecuencia desc desde buildData
+
+  /* ── Filter ──────────────────────────────────────── */
+  function applyFilter(kw) {
+    if (kw===curKw) return; curKw=kw;
+    const lbl = document.getElementById('klbl');
+    lbl.textContent = kw>=0 ? KW[kw] : '';
+    lbl.style.color = kw>=0 ? CL(kw)+'88' : '';
+
+    if (navMode === 'time') {
+      const mo = curMo;
+      const cW = chartEl.clientWidth, cH = chartEl.clientHeight;
+      dots.forEach(d => {
+        if (d.mi !== mo || !okKw(d) || (kw >= 0 && d.ki !== kw)) {
+          d.targetAlpha = 0; d.delay = 0;
+        }
+      });
+      const active = dots
+        .filter(d => d.mi === mo && okKw(d) && (kw === -1 || d.ki === kw))
+        .sort((a, b) => a.tx - b.tx);
+      active.forEach((d, i) => {
+        const offsetX = (d.tx - cW * 0.5) * 0.65;
+        d.cx = d.tx + offsetX + (Math.random()-0.5)*40;
+        d.cy = -cH * 0.1 - Math.random()*cH*0.15;
+        d.alpha = 0; d.targetAlpha = 210;
+        d.delay = Math.floor(i / active.length * 75);
+      });
+      KW.forEach((_,i) => { const e=document.getElementById(`li${i}`); if(e) e.style.opacity=(kw===-1||i===kw)?1:.22; });
+      chartEl._wake?.(kw >= 0 ? kw : -1);
+      return;
+    }
+
+    if (kw === -1) {
+      const sorted = [...dots].sort((a, b) => a.tx - b.tx);
+      sorted.forEach((d, i) => {
+        d.targetAlpha = okKw(d) ? 210 : 0;
+        d.delay = okKw(d) ? Math.floor(i / sorted.length * 70) : 0;
+      });
+    } else {
+      const cW = chartEl.clientWidth, cH = chartEl.clientHeight;
+      dots.forEach(d => {
+        if (d.ki !== kw) { d.targetAlpha = okKw(d) ? 18 : 0; d.delay = 0; }
+      });
+      const active = dots.filter(d => d.ki === kw && okKw(d)).sort((a, b) => a.tx - b.tx);
+      active.forEach((d, i) => {
+        const offsetX = (d.tx - cW * 0.5) * 0.65;
+        d.cx = d.tx + offsetX + (Math.random()-0.5)*40;
+        d.cy = -cH * 0.1 - Math.random()*cH*0.15;
+        d.alpha = 0; d.targetAlpha = 210;
+        d.delay = Math.floor(i / active.length * 75);
+      });
+      // Dots del mismo keyword que no pasan score: ocultar
+      dots.filter(d => d.ki === kw && !okKw(d)).forEach(d => { d.targetAlpha = 0; d.delay = 0; });
+    }
+
+    KW.forEach((_,i) => { const e=document.getElementById(`li${i}`); if(e) e.style.opacity=(kw===-1||i===kw)?1:.22; });
+    document.querySelectorAll('.chapter[data-type="kw"]').forEach(ch => {
+      const chKw = parseInt(ch.dataset.kw ?? '-99');
+      const isActive = chKw === kw;
+      ch.classList.toggle('chapter--active', isActive);
+      ch.style.borderLeftColor = isActive ? '' : (chKw >= 0 ? `${CL(chKw)}33` : 'transparent');
+    });
+    chartEl._wake?.(kw);
+  }
+
+  /* ── Cambio de top-N (sin re-animar posición) ──────── */
+  function applyTopN(n) {
+    if (n === topNFilter) return;
+    topNFilter = n;
+    // Reset keyword sel si el seleccionado quedó fuera
+    if (parseInt(sel.value) >= topNFilter) { sel.value = -1; curKw = -99; }
+    buildKwSelect();
+    renderLegend();
+    renderSections();
+
+    // Actualizar targetAlpha in-place según modo actual
+    if (navMode === 'kw') {
+      dots.forEach(d => {
+        if (!okKw(d)) { d.targetAlpha = 0; return; }
+        const isActive = curKw === -1 || curKw === -99 || d.ki === curKw;
+        d.targetAlpha = isActive ? 210 : (curKw === -1 || curKw === -99 ? 210 : 18);
+      });
+    } else {
+      dots.forEach(d => {
+        const inMo = curMo === -1 || d.mi === curMo;
+        const inKw = curKw === -1 || curKw === -99 || d.ki === curKw;
+        d.targetAlpha = (!okKw(d) || !inMo || !inKw) ? 0 : 210;
+      });
+    }
+    chartEl._wake?.();
+    updateStats();
+  }
+
+  function switchView(mode) {
+    if (mode===viewMode) return;
+    viewMode=mode;
+    document.getElementById('btn-month').classList.toggle('active', mode==='month');
+    document.getElementById('btn-day').classList.toggle('active',   mode==='day');
+    updateStats();
+    computeTargets(chartEl.clientWidth, chartEl.clientHeight);
+    chartEl._wake?.();
+  }
+
+  /* ── Filtro temporal: highlight por mes ─────────── */
+  function applyTimeMo(mo) {
+    if (mo===curMo) return; curMo=mo;
+    curKw = -99; // reset keyword filter al cambiar de mes
+    KW.forEach((_,i) => { const e=document.getElementById(`li${i}`); if(e) e.style.opacity=1; });
+    dayStackMo = mo; // -1 = panorama mes, >= 0 = detalle días
+
+    if (mo === -1) {
+      // Volver a vista de meses
+      computeTargets(chartEl.clientWidth, chartEl.clientHeight);
+      const sorted = [...dots].sort((a,b) => a.tx - b.tx);
+      sorted.forEach((d, i) => {
+        d.targetAlpha = okKw(d) ? 210 : 0;
+        d.delay = okKw(d) ? Math.floor(i / sorted.length * 70) : 0;
+      });
+    } else {
+      // Recalcular targets en layout día-stack y hacer fly-in progresivo
+      computeTargetsDayStack(mo);
+      const cW = chartEl.clientWidth, cH = chartEl.clientHeight;
+      dots.forEach(d => {
+        if (d.mi !== mo || !okKw(d)) { d.targetAlpha = 0; d.delay = 0; }
+      });
+      const active = dots.filter(d => d.mi === mo && okKw(d)).sort((a, b) => a.tx - b.tx);
+      active.forEach((d, i) => {
+        const offsetX = (d.tx - cW * 0.5) * 0.65;
+        d.cx = d.tx + offsetX + (Math.random()-0.5)*40;
+        d.cy = -cH * 0.1 - Math.random()*cH*0.15;
+        d.alpha = 0; d.targetAlpha = 210;
+        d.delay = Math.floor(i / active.length * 75);
+      });
+    }
+    // Highlight capítulo activo
+    document.querySelectorAll('.chapter[data-type="mo"]').forEach(ch => {
+      const chMo = parseInt(ch.dataset.mo ?? '-99');
+      const isActive = chMo === mo;
+      ch.classList.toggle('chapter--active', isActive);
+      ch.style.borderLeftColor = isActive ? '' : (chMo >= 0 ? '#00e5a033' : 'transparent');
+    });
+    chartEl._wake?.(-1); // no keyword-specific glow en modo temporal
+  }
+
+  /* ── Cambio de modo nav ──────────────────────────── */
+  function switchNavMode(mode) {
+    if (mode===navMode) return;
+    navMode=mode;
+    curKw=-99; curMo=-99; dayStackMo=-1; curChapterSecIdx=-1;
+    cwEl.style.opacity = '1'; cwEl.style.pointerEvents = ''; cwEl.style.transform = '';
+    document.getElementById('btn-kw').classList.toggle('active',   mode==='kw');
+    document.getElementById('btn-time').classList.toggle('active', mode==='time');
+    renderSections();
+    updateLegVisibility();
+    window.scrollTo({ top:0, behavior:'smooth' });
+    if (mode==='kw')   setTimeout(() => applyFilter(-1), 120);
+    else               setTimeout(() => applyTimeMo(-1), 120);
+  }
+
+  /* ── Step observer: activa filtros y highlights al scroll ── */
+  function setupStepObserver() {
+    if (stepObserver) stepObserver.disconnect();
+    if (pauseObserver) pauseObserver.disconnect();
+
+    stepObserver = new IntersectionObserver(entries => {
+      let best = null, bestRatio = 0;
+      entries.forEach(e => {
+        if (e.isIntersecting && e.intersectionRatio > bestRatio) {
+          bestRatio = e.intersectionRatio; best = e.target;
+        }
+      });
+      if (!best) return;
+
+      // Marcar step activo dentro de su chapter
+      const chapter = best.closest('.chapter');
+      if (chapter) {
+        chapter.querySelectorAll('.step').forEach(s => s.classList.remove('step--active'));
+        best.classList.add('step--active');
+      }
+
+      // Highlight del dot referenciado (siempre actualizar)
+      const dotId = parseInt(best.dataset.dotId ?? '-1');
+      chartEl._setHighlight?.(dotId >= 0 ? dotId : -1);
+
+      // Aplicar filtro de sección solo si cambió el chapter (evita re-animación)
+      const secIdx = parseInt(best.dataset.secIdx ?? '-1');
+      if (secIdx === curChapterSecIdx) return; // mismo chapter → no re-animar
+      curChapterSecIdx = secIdx;
+
+      const list = navMode === 'kw' ? SECS : SECS_TIME;
+      const s    = list[secIdx];
+      if (!s || s.type === 'pause') return;
+
+      if (s.type === 'beat') {
+        if (s.beatIdx !== activeStory) {
+          activeStory = s.beatIdx;
+          chartEl._wake?.();
+        }
+        return;
+      }
+
+      activeStory = -1;
+      if (navMode === 'kw') {
+        sel.value = s.kw ?? -1;
+        applyFilter(s.kw ?? -1);
+      } else {
+        applyTimeMo(s.mo ?? -1);
+      }
+    }, { threshold: [0.25, 0.5] });
+
+    // Observer para pausas — fade out/in de #cw
+    let pauseCount = 0;
+    pauseObserver = new IntersectionObserver(entries => {
+      entries.forEach(e => { pauseCount += e.isIntersecting ? 1 : -1; });
+      pauseCount = Math.max(0, pauseCount);
+      cwEl.style.opacity       = pauseCount > 0 ? '0' : '1';
+      cwEl.style.pointerEvents = pauseCount > 0 ? 'none' : '';
+      cwEl.style.transform     = pauseCount > 0 ? 'translateY(-6px)' : '';
+    }, { threshold: 0.15 });
+
+    secEl.querySelectorAll('.step').forEach(el => stepObserver.observe(el));
+    secEl.querySelectorAll('.chapter-pause').forEach(el => pauseObserver.observe(el));
+  }
+
+  /* ── Events ─────────────────────────────────────── */
+  sel.addEventListener('change', () => applyFilter(parseInt(sel.value)));
+  topnEl.addEventListener('change', () => applyTopN(parseInt(topnEl.value)));
+  document.getElementById('btn-month').addEventListener('click', () => switchView('month'));
+  document.getElementById('btn-day').addEventListener('click',   () => switchView('day'));
+  document.getElementById('btn-kw').addEventListener('click',    () => switchNavMode('kw'));
+  document.getElementById('btn-time').addEventListener('click',  () => switchNavMode('time'));
+
+  updateLegVisibility();
+  setTimeout(() => applyFilter(-1), 100);
+}
+
+/* ══════════════════════════════════════════════════════
+   BOOTSTRAP — Explorar
+   ══════════════════════════════════════════════════════ */
+(async () => {
+  try {
+    document.getElementById('loading-text').textContent = 'Cargando datos...';
+    const raw       = await loadData();
+    const processed = processData(raw);
+    document.getElementById('loading').style.opacity = 0;
+    setTimeout(() => document.getElementById('loading').style.display='none', 500);
+    initViz(processed);
+  } catch (err) {
+    document.getElementById('loading-text').textContent = 'Error al cargar';
+    document.getElementById('error-msg').style.display = 'block';
+    document.getElementById('error-msg').textContent   = err.message;
+    document.querySelector('.spinner').style.display   = 'none';
+  }
+})();
+
+/* ══════════════════════════════════════════════════════
+   TAB SWITCHER
+   ══════════════════════════════════════════════════════ */
+(function () {
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = {
+    explore: document.getElementById('panel-explore'),
+    query:   document.getElementById('panel-query'),
+  };
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      const target = btn.dataset.tab;
+      Object.entries(panels).forEach(([key, el]) => {
+        el.style.display = key === target ? 'block' : 'none';
+      });
+      document.getElementById('tooltip').style.opacity = 0;
+    });
+  });
+})();
+
+
+/* ══════════════════════════════════════════════════════
+   RAG — PESTAÑA CONSULTAR
+   ══════════════════════════════════════════════════════ */
+(function () {
+  const input      = document.getElementById('rag-input');
+  const btn        = document.getElementById('rag-btn');
+  const empty      = document.getElementById('rag-empty');
+  const spinner    = document.getElementById('rag-spinner');
+  const answerWrap = document.getElementById('rag-answer-wrap');
+  const answerEl   = document.getElementById('rag-answer');
+  const srcToggle  = document.getElementById('sources-toggle');
+  const srcList    = document.getElementById('sources-list');
+
+  // Chips
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      input.value = chip.textContent.trim();
+      runQuery();
+    });
+  });
+
+  // Submit
+  btn.addEventListener('click', runQuery);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') runQuery(); });
+
+  // Sources toggle
+  let srcOpen = false;
+  srcToggle.addEventListener('click', () => {
+    srcOpen = !srcOpen;
+    srcList.style.display = srcOpen ? 'block' : 'none';
+    srcToggle.textContent = (srcOpen ? '▾' : '▸') + ' Fuentes consultadas';
+  });
+
+  function setLoading(on) {
+    btn.disabled       = on;
+    spinner.style.display    = on ? 'block' : 'none';
+    empty.style.display      = 'none';
+    answerWrap.style.display = on ? 'none' : '';
+  }
+
+  function renderSources(sources) {
+    srcList.innerHTML = '';
+    srcOpen = false;
+    srcToggle.textContent = '▸ Fuentes consultadas';
+    srcList.style.display = 'none';
+    sources.forEach((s, i) => {
+      const el = document.createElement('div');
+      el.className = 'source-item';
+      el.innerHTML = `
+        <div class="source-frase">"${(s.content || '').slice(0, 160)}${s.content?.length > 160 ? '…' : ''}"</div>
+        <div class="source-meta">
+          [${i+1}] ${s.fecha || '?'} · ${s.subject || '?'} · ${s.keywords || '?'}
+          · score ${s.puntuacion_total ?? '?'} · ${s.min_sec || '?'}
+        </div>`;
+      srcList.appendChild(el);
+    });
+  }
+
+  async function runQuery() {
+    const q = input.value.trim();
+    if (!q) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${WORKER_URL}/query`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || res.statusText);
+      }
+      const { answer, sources } = await res.json();
+      answerEl.textContent = answer;
+      renderSources(sources || []);
+      setLoading(false);
+      answerWrap.style.display = 'block';
+    } catch (err) {
+      setLoading(false);
+      answerWrap.style.display = 'block';
+      answerEl.textContent = `Error: ${err.message}`;
+      srcList.innerHTML = '';
+    }
+  }
+})();
+</script>
+</body>
+</html>
