@@ -165,7 +165,7 @@ async function scrollAllQdrant(qdrantUrl, qdrantKey) {
   do {
     const body = { limit: 1000, with_payload: true, with_vectors: false };
     if (offset !== null) body.offset = offset;
-    const res = await fetch(`${qdrantUrl}/collections/Nash/points/scroll`, {
+    const res = await fetch(`${qdrantUrl}/collections/SDN_Challenge_Desaparecidos/points/scroll`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'api-key': qdrantKey },
       body: JSON.stringify(body),
@@ -201,7 +201,7 @@ async function embedQuery(query, geminiKey) {
 }
 
 async function searchQdrant(vector, qdrantUrl, qdrantKey, topK = 15) {
-  const url = `${qdrantUrl}/collections/Nash/points/search`;
+  const url = `${qdrantUrl}/collections/SDN_Challenge_Desaparecidos/points/search`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'api-key': qdrantKey },
