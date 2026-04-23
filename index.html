@@ -4,13 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nash — Keyword Explorer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <style>
 /* ══ CSS VARIABLES — DARK (default) ══════════════════════ */
 :root {
   --bg:        #000000;
-  --surface:   #0a0a0a;
-  --surface2:  #111111;
-  --surface3:  #0a0a0a;
+  --surface:   #000000;
+  --surface2:  #000000;
+  --surface3:  #000000;
   --border:    rgba(255,255,255,0.08);
   --border-hi: rgba(255,255,255,0.16);
   --txt:       #c8b8e0;
@@ -19,9 +20,9 @@
   --txt-lo:    rgba(255,255,255,0.42);
   --txt-dim:   #9988bb;
   --accent:    #cc55ff;
-  --accent-bg: #1e003a;
+  --accent-bg: #000000;
   --green:     #00e5a0;
-  --green-bg:  #001a12;
+  --green-bg:  #000000;
   --err:       #ff4455;
   --p5-bg-r:0; --p5-bg-g:0; --p5-bg-b:0;
   --p5-txt-r:255; --p5-txt-g:255; --p5-txt-b:255;
@@ -73,34 +74,34 @@ body {
 #toolbar-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 
 select {
-  background: var(--surface); border: 1px solid var(--border-hi); color: var(--accent);
+  background: var(--surface); border: 1px solid var(--border-hi); color: #ffffff;
   padding: 4px 9px; font-family: 'Courier New', monospace;
   font-size: 9px; letter-spacing: 1.5px; cursor: pointer;
   outline: none; text-transform: uppercase; max-width: 160px;
 }
 select option { background: var(--surface); }
-#klbl { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--txt-lo); transition: color .4s; white-space: nowrap; }
+#klbl { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; transition: color .4s; white-space: nowrap; }
 
 #view-toggle, #mode-toggle { display: flex; gap: 2px; }
 #topn-sel {
-  background: var(--surface2); border: 1px solid var(--accent); color: var(--accent);
+  background: var(--surface2); border: 1px solid var(--border-hi); color: #ffffff;
   padding: 4px 9px; font-family: 'Courier New', monospace;
   font-size: 9px; letter-spacing: 1.5px; cursor: pointer;
   outline: none; text-transform: uppercase; max-width: 110px;
 }
 #view-toggle button, #mode-toggle button {
-  background: var(--surface); border: 1px solid var(--border-hi); color: var(--txt-lo);
+  background: var(--surface); border: 1px solid var(--border-hi); color: #ffffff;
   padding: 4px 8px; font-family: 'Courier New', monospace;
   font-size: 9px; letter-spacing: 1px; cursor: pointer;
   text-transform: uppercase; outline: none;
   transition: color .2s, border-color .2s, background .2s;
   white-space: nowrap;
 }
-#view-toggle button.active { color: var(--accent); border-color: var(--accent); background: var(--accent-bg); }
-#mode-toggle button.active  { color: var(--green); border-color: var(--green); background: var(--green-bg); }
+#view-toggle button.active { color: #ffffff; border-color: #ffffff; background: var(--accent-bg); }
+#mode-toggle button.active  { color: #ffffff; border-color: #ffffff; background: var(--green-bg); }
 
 #stats {
-  font-size: 9px; letter-spacing: 2px; color: var(--txt-mid);
+  font-size: 9px; letter-spacing: 2px; color: #ffffff;
   text-transform: uppercase; white-space: nowrap; pointer-events: none;
 }
 
@@ -127,8 +128,8 @@ select option { background: var(--surface); }
   border-left: 3px solid transparent;
   transition: border-left-color .5s, background .5s;
 }
-.chapter--active { background: var(--accent-bg); border-left-color: var(--accent) !important; }
-.chapter--active.chapter--time { background: var(--green-bg); border-left-color: var(--green) !important; }
+.chapter--active { background: var(--accent-bg); border-left-color: #ffffff !important; }
+.chapter--active.chapter--time { background: var(--green-bg); border-left-color: #ffffff !important; }
 .chapter-left {
   position: sticky; top: 420px; align-self: start;
   padding: 36px 24px; border-right: 1px solid var(--border);
@@ -238,11 +239,11 @@ select option { background: var(--surface); }
   flex: 1; padding: 11px 0; text-align: center;
   font-family: 'Courier New', monospace; font-size: 9px;
   letter-spacing: 2.5px; text-transform: uppercase;
-  color: var(--txt-lo); background: none; border: none;
+  color: #ffffff; background: none; border: none;
   cursor: pointer; transition: color .2s, border-bottom .2s;
   border-bottom: 2px solid transparent;
 }
-.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-btn.active { color: #ffffff; border-bottom-color: #ffffff; }
 
 /* ── PANELS ──────────────────────────────────────────── */
 #panel-explore { display: block; }
@@ -326,6 +327,51 @@ select option { background: var(--surface); }
 
 body::-webkit-scrollbar { width: 3px; }
 body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+/* ══ WELCOME ══════════════════════════════════════════ */
+#welcome {
+  position: relative; width: 100%; height: 100vh;
+  overflow: hidden; background: #000;
+  display: flex; align-items: center; justify-content: center;
+}
+#welcome-canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+#welcome-vg {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center,
+    rgba(0,0,0,.78) 0%, rgba(0,0,0,.38) 52%, rgba(0,0,0,.0) 100%);
+}
+#welcome-body {
+  position: relative; z-index: 2;
+  text-align: center; max-width: 780px; padding: 0 32px;
+}
+#welcome-h1 {
+  font-size: clamp(1.4rem, 4vw, 2.6rem); font-weight: bold;
+  line-height: 1.25; color: #ffffff; margin-bottom: 20px;
+  font-family: 'Courier New', monospace;
+}
+#welcome-p {
+  font-size: clamp(12px, 1.4vw, 15px); line-height: 1.85;
+  color: #ffffff; margin-bottom: 12px;
+  font-family: 'Courier New', monospace;
+}
+#welcome-note {
+  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  color: #ffffff; margin-bottom: 38px;
+  font-family: 'Courier New', monospace;
+}
+#exploreBtn {
+  border: 1px solid rgba(255,255,255,.4); background: transparent;
+  color: #ffffff; padding: 10px 28px; border-radius: 24px;
+  font-size: 15px; cursor: pointer; font-family: 'Courier New', monospace;
+  animation: wbounce 2s ease-in-out infinite;
+  transition: background .2s, border-color .2s;
+}
+#exploreBtn:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.8); }
+@keyframes wbounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(6px); }
+}
+
 </style>
 </head>
 <body>
@@ -335,6 +381,100 @@ body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px
   <div id="loading-text">Cargando datos...</div>
   <div id="error-msg"></div>
 </div>
+
+<!-- ── WELCOME ───────────────────────────────────── -->
+<section id="welcome">
+  <canvas id="welcome-canvas"></canvas>
+  <div id="welcome-vg"></div>
+  <div id="welcome-body">
+    <h1 id="welcome-h1">Las personas desaparecidas tampoco están en las mañaneras de la presidenta</h1>
+    <p id="welcome-p">En México las personas desaparecen dos veces, la primera cuando no regresan con sus familias y la segunda cuando no las nombran</p>
+    <p id="welcome-note">7,567 frases analizadas</p>
+    <button id="exploreBtn">Explorar →</button>
+  </div>
+</section>
+<script>
+(function() {
+  const section = document.getElementById('welcome');
+  const canvas  = section.querySelector('canvas');
+  if (!canvas) { console.error('welcome: canvas not found'); return; }
+  const ctx = canvas.getContext('2d');
+  let width, height, nodes, simulation;
+
+  function resize() {
+    width  = canvas.width  = section.offsetWidth  || window.innerWidth;
+    height = canvas.height = section.offsetHeight || window.innerHeight;
+    if (simulation) simulation.force('center', d3.forceCenter(width / 2, height / 2));
+  }
+
+  window.addEventListener('resize', resize);
+
+  document.getElementById('exploreBtn').addEventListener('click', () => {
+    const t = document.querySelector('#cw') || document.querySelector('#tab-bar');
+    if (t) t.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  // Fetch first, then resize once layout is ready — guarantees width/height
+  // are non-zero when nodes are initialized
+  fetch(WORKER_URL + '/data')
+    .then(r => r.json())
+    .then(data => {
+      const dots = data.dots || [];
+
+      // Now do resize — by the time fetch resolves, layout is painted
+      resize();
+
+      // Safety check: if still zero, force to viewport size
+      if (!width || !height) {
+        width  = canvas.width  = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+
+      console.log('canvas:', width, height, '| dots:', dots.length);
+
+      nodes = dots.map(d => ({
+        x:     width  / 2 + (Math.random() - 0.5) * 100,
+        y:     height / 2 + (Math.random() - 0.5) * 100,
+        tx:    20 + Math.random() * (width  - 40),
+        ty:    20 + Math.random() * (height - 40),
+        color: KEYWORD_COLORS[d[5]] || '#ffffff',
+      }));
+
+      simulation = d3.forceSimulation(nodes)
+        .alphaDecay(0)
+        .alphaTarget(0.3)
+        .force('x',       d3.forceX(d => d.tx).strength(0.035))
+        .force('y',       d3.forceY(d => d.ty).strength(0.035))
+        .force('collide', d3.forceCollide(3))
+        .on('tick', () => {
+          nodes.forEach(d => {
+            d.tx += (Math.random() - 0.5) * 0.5;
+            d.ty += (Math.random() - 0.5) * 0.5;
+            d.tx = Math.max(20, Math.min(width  - 20, d.tx));
+            d.ty = Math.max(20, Math.min(height - 20, d.ty));
+          });
+          ctx.clearRect(0, 0, width, height);
+          nodes.forEach(d => {
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle   = d.color;
+            ctx.globalAlpha = 0.7;
+            ctx.fill();
+          });
+          ctx.globalAlpha = 1;
+        });
+
+      const observer = new IntersectionObserver(entries => {
+        entries[0].isIntersecting ? simulation.restart() : simulation.stop();
+      }, { threshold: 0.05 });
+      observer.observe(section);
+    })
+    .catch(e => {
+      console.error('welcome fetch failed:', e);
+      canvas.style.display = 'none';
+    });
+})();
+</script>
 
 <!-- ── TAB BAR ───────────────────────────────────── -->
 <div id="tab-bar">
@@ -421,6 +561,7 @@ body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px
   </div>
 </div><!-- /panel-query -->
 
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.3/p5.min.js"></script>
 <script>
 /* ══════════════════════════════════════════════════════
@@ -430,20 +571,65 @@ const WORKER_URL = 'https://nash-api.cvelazquezm.workers.dev';
 const MAX_KW   = 999;
 const PALETTE  = ['#ff00cc','#00e5a0','#ffaa00','#ff4455','#4499ff','#bb44ff','#ff8844','#00ccff'];
 const MES_ES   = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-const SUBJECT_COLORS = {
-  'Desapariciones':    '#ffffff',
-  'Seguridad pública': '#e94649',
-  'Política exterior': '#577691',
-  'Actores políticos': '#43ab8c',
-  'Economía':          '#90bf6d',
-  'Salud':             '#fac74f',
+const KEYWORD_COLORS = {
+  // Desapariciones
+  'desaparecidos':                       '#ffffff',
+  'madres buscadoras':                   '#ffffff',
+  'personas desaparecidas':              '#ffffff',
+  'comisión nacional de búsqueda':       '#ffffff',
+  'fosas':                               '#ffffff',
+  // Seguridad pública
+  'homicidios':                          '#f34648',
+  'violencia':                           '#f34648',
+  'narcotráfico':                        '#f34648',
+  'huachicol':                           '#f34648',
+  'crimen organizado':                   '#f34648',
+  'fentanilo':                           '#f34648',
+  // Política exterior
+  'estados unidos':                      '#4874e0',
+  'trump':                               '#4874e0',
+  'migrantes':                           '#4874e0',
+  'aranceles':                           '#4874e0',
+  'soberanía':                           '#4874e0',
+  // Actores políticos
+  'lópez obrador':                       '#f4b723',
+  'morena':                              '#f4b723',
+  'pan':                                 '#f4b723',
+  'pri':                                 '#f4b723',
+  'oposición':                           '#f4b723',
+  'cuarta transformación':               '#f4b723',
+  'corrupción':                          '#f4b723',
+  // Economía
+  'inflación':                           '#00ab8c',
+  'salario mínimo':                      '#00ab8c',
+  'inversiones':                         '#00ab8c',
+  // Salud
+  'medicamentos':                        '#5f2a91',
+  'imss bienestar':                      '#5f2a91',
+  'vacunas':                             '#5f2a91',
+  'insumos médicos':                     '#5f2a91',
+  'personal de salud':                   '#5f2a91',
 };
+// Orden de categorías en la leyenda + sort alfabético dentro de cada una
+const CAT_ORDER = ['politica','actores','economia','seguridad','salud','desapariciones'];
+const KEYWORD_CAT = {
+  'estados unidos':'politica','trump':'politica','migrantes':'politica','aranceles':'politica','soberanía':'politica',
+  'lópez obrador':'actores','morena':'actores','pan':'actores','pri':'actores','oposición':'actores','cuarta transformación':'actores','corrupción':'actores',
+  'inflación':'economia','salario mínimo':'economia','inversiones':'economia',
+  'medicamentos':'salud','imss bienestar':'salud','vacunas':'salud','insumos médicos':'salud','personal de salud':'salud',
+  'desaparecidos':'desapariciones','madres buscadoras':'desapariciones','personas desaparecidas':'desapariciones','comisión nacional de búsqueda':'desapariciones','fosas':'desapariciones',
+  'homicidios':'seguridad','violencia':'seguridad','narcotráfico':'seguridad','huachicol':'seguridad','crimen organizado':'seguridad','fentanilo':'seguridad',
+};
+function kwSortKey(kw) {
+  const cat = CAT_ORDER.indexOf(KEYWORD_CAT[kw] ?? '');
+  return (cat < 0 ? 99 : cat) + '|' + kw;
+}
 function hexRgb(h) {
   return { r:parseInt(h.slice(1,3),16), g:parseInt(h.slice(3,5),16), b:parseInt(h.slice(5,7),16) };
 }
 function palRgb(i) { return hexRgb(PALETTE[i % 8]); }
-function subjectRgb(subject) {
-  return hexRgb(SUBJECT_COLORS[subject] || '#888888');
+function keywordRgb(kw) {
+  return hexRgb(KEYWORD_COLORS[kw] || '#888888');
 }
 const TEXTS = {
   intro: 'Fragmentos de conferencias de prensa indexados por keyword y fecha. Desplázate para explorar cada tema o filtra desde el dropdown.',
@@ -803,12 +989,12 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
   allOpt.value = KW.length; allOpt.textContent = `Todos (${KW.length})`;
   topnEl.appendChild(allOpt);
   // Opciones fijas de corte: 3, 5, 8, 10, 15, 20 — solo las que tengan sentido
-  [3, 5, 8, 10, 15, 20].filter(n => n < KW.length).forEach(n => {
+  [3, 5, 10, 15, 20].filter(n => n < KW.length).forEach(n => {
     const o = document.createElement('option');
     o.value = n; o.textContent = `Top ${n}`;
     topnEl.appendChild(o);
   });
-  topnEl.value = Math.min(8, KW.length); // default top 8
+  topnEl.value = KW.length; // default: todas las keywords
   topNFilter   = parseInt(topnEl.value);
 
   // Construir #sel (keyword individual) — se reconstruye al cambiar topN
@@ -826,10 +1012,14 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
 
   function renderLegend() {
     leg.innerHTML = '';
-    KW.slice(0, topNFilter).forEach((kw, i) => {
+    const sorted = KW.slice(0, topNFilter)
+      .map((kw, i) => ({ kw, i }))
+      .sort((a, b) => kwSortKey(a.kw).localeCompare(kwSortKey(b.kw), 'es'));
+    sorted.forEach(({ kw, i }) => {
       const li = document.createElement('div');
       li.className='li'; li.id=`li${i}`;
-      li.innerHTML=`<div class="ld" style="background:${CL(i)}"></div><span class="lt" style="color:${CL(i)}">${kw}</span>`;
+      const kwCol = KEYWORD_COLORS[kw] || '#888888';
+      li.innerHTML=`<div class="ld" style="background:${kwCol}"></div><span class="lt" style="color:${kwCol}">${kw}</span>`;
       li.onclick = () => { sel.value=i; applyFilter(i); };
       leg.appendChild(li);
     });
@@ -1121,7 +1311,7 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
         // Glow solo en dots del keyword activo, no en "mostrar todos"
         const glowing = activeKwForGlow >= 0 && d.ki === activeKwForGlow;
         const r = dotRadiusForScore(DR, d.score);
-        drawGlowDot(d.cx, d.cy, r, subjectRgb(d.subject), d.alpha, glowing);
+        drawGlowDot(d.cx, d.cy, r, keywordRgb(KW[d.ki]), d.alpha, glowing);
       });
 
       settled = !moving;
@@ -1191,7 +1381,7 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
       if (highlightId < 0) return;
       const d = dots.find(dot => dot.id === highlightId);
       if (!d || d.alpha < 10) return;
-      const rgb   = subjectRgb(d.subject);
+      const rgb   = keywordRgb(KW[d.ki]);
       const pulse = 0.5 + 0.5 * Math.sin(p.frameCount * 0.08);
       const [tr,tg,tb] = p5txt();
 
@@ -1620,6 +1810,7 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
     }
   }
 })();
+
 </script>
 </body>
 </html>
