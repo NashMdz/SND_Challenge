@@ -394,17 +394,38 @@ body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px
   </div>
 </section>
 <script>
+const WORKER_URL = 'https://nash-api.cvelazquezm.workers.dev';
+const KEYWORD_COLORS = {
+  'desaparecidos':'#ffffff','madres buscadoras':'#ffffff','personas desaparecidas':'#ffffff',
+  'comisión nacional de búsqueda':'#ffffff','fosas':'#ffffff',
+  'homicidios':'#f34648','violencia':'#f34648','narcotráfico':'#f34648',
+  'huachicol':'#f34648','crimen organizado':'#f34648','fentanilo':'#f34648',
+  'estados unidos':'#4874e0','trump':'#4874e0','migrantes':'#4874e0',
+  'aranceles':'#4874e0','soberanía':'#4874e0',
+  'lópez obrador':'#f4b723','morena':'#f4b723','pan':'#f4b723','pri':'#f4b723',
+  'oposición':'#f4b723','cuarta transformación':'#f4b723','corrupción':'#f4b723',
+  'inflación':'#00ab8c','salario mínimo':'#00ab8c','inversiones':'#00ab8c',
+  'medicamentos':'#5f2a91','imss bienestar':'#5f2a91','vacunas':'#5f2a91',
+  'insumos médicos':'#5f2a91','personal de salud':'#5f2a91',
+};
+const SUBJECT_COLORS = {
+  'Desapariciones':    '#ffffff',
+  'Politica_exterior': '#4874e0',
+  'Economia':          '#00ab8c',
+  'Seguridad_publica': '#f34648',
+  'Actores_politicos': '#f4b723',
+  'Salud':             '#5f2a91',
+};
 (function() {
   const section = document.getElementById('welcome');
   const canvas  = section.querySelector('canvas');
   if (!canvas) { console.error('welcome: canvas not found'); return; }
   const ctx = canvas.getContext('2d');
-  let width, height, nodes, simulation;
+  let width, height, nodes;
 
   function resize() {
     width  = canvas.width  = section.offsetWidth  || window.innerWidth;
     height = canvas.height = section.offsetHeight || window.innerHeight;
-    if (simulation) simulation.force('center', d3.forceCenter(width / 2, height / 2));
   }
 
   window.addEventListener('resize', resize);
@@ -433,41 +454,45 @@ body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px
       console.log('canvas:', width, height, '| dots:', dots.length);
 
       nodes = dots.map(d => ({
-        x:     width  / 2 + (Math.random() - 0.5) * 100,
-        y:     height / 2 + (Math.random() - 0.5) * 100,
-        tx:    20 + Math.random() * (width  - 40),
-        ty:    20 + Math.random() * (height - 40),
-        color: KEYWORD_COLORS[d[5]] || '#ffffff',
+        x:     20 + Math.random() * (width  - 40),
+        y:     20 + Math.random() * (height - 40),
+        color: SUBJECT_COLORS[d[5]] || '#aaaaaa',
       }));
 
-      simulation = d3.forceSimulation(nodes)
-        .alphaDecay(0)
-        .alphaTarget(0.3)
-        .force('x',       d3.forceX(d => d.tx).strength(0.035))
-        .force('y',       d3.forceY(d => d.ty).strength(0.035))
-        .force('collide', d3.forceCollide(3))
-        .on('tick', () => {
-          nodes.forEach(d => {
-            d.tx += (Math.random() - 0.5) * 0.5;
-            d.ty += (Math.random() - 0.5) * 0.5;
-            d.tx = Math.max(20, Math.min(width  - 20, d.tx));
-            d.ty = Math.max(20, Math.min(height - 20, d.ty));
-          });
-          ctx.clearRect(0, 0, width, height);
-          nodes.forEach(d => {
-            ctx.beginPath();
-            ctx.arc(d.x, d.y, 2.5, 0, Math.PI * 2);
-            ctx.fillStyle   = d.color;
-            ctx.globalAlpha = 0.7;
-            ctx.fill();
-          });
-          ctx.globalAlpha = 1;
+      nodes.forEach(d => {
+        d.vx = (Math.random() - 0.5) * 0.4;
+        d.vy = (Math.random() - 0.5) * 0.4;
+      });
+
+      function tick() {
+        nodes.forEach(d => {
+          d.x += d.vx;
+          d.y += d.vy;
+
+          if (d.x < 4 || d.x > width  - 4) d.vx *= -1;
+          if (d.y < 4 || d.y > height - 4) d.vy *= -1;
+
+          d.vx += (Math.random() - 0.5) * 0.02;
+          d.vy += (Math.random() - 0.5) * 0.02;
+
+          const speed = Math.sqrt(d.vx * d.vx + d.vy * d.vy);
+          if (speed > 0.5) { d.vx *= 0.5 / speed; d.vy *= 0.5 / speed; }
         });
 
-      const observer = new IntersectionObserver(entries => {
-        entries[0].isIntersecting ? simulation.restart() : simulation.stop();
-      }, { threshold: 0.05 });
-      observer.observe(section);
+        ctx.clearRect(0, 0, width, height);
+        nodes.forEach(d => {
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle   = d.color;
+          ctx.globalAlpha = 0.75;
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+
+        requestAnimationFrame(tick);
+      }
+
+      requestAnimationFrame(tick);
     })
     .catch(e => {
       console.error('welcome fetch failed:', e);
@@ -567,49 +592,9 @@ body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px
 /* ══════════════════════════════════════════════════════
    CONFIG
    ══════════════════════════════════════════════════════ */
-const WORKER_URL = 'https://nash-api.cvelazquezm.workers.dev';
 const MAX_KW   = 999;
 const PALETTE  = ['#ff00cc','#00e5a0','#ffaa00','#ff4455','#4499ff','#bb44ff','#ff8844','#00ccff'];
 const MES_ES   = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-const KEYWORD_COLORS = {
-  // Desapariciones
-  'desaparecidos':                       '#ffffff',
-  'madres buscadoras':                   '#ffffff',
-  'personas desaparecidas':              '#ffffff',
-  'comisión nacional de búsqueda':       '#ffffff',
-  'fosas':                               '#ffffff',
-  // Seguridad pública
-  'homicidios':                          '#f34648',
-  'violencia':                           '#f34648',
-  'narcotráfico':                        '#f34648',
-  'huachicol':                           '#f34648',
-  'crimen organizado':                   '#f34648',
-  'fentanilo':                           '#f34648',
-  // Política exterior
-  'estados unidos':                      '#4874e0',
-  'trump':                               '#4874e0',
-  'migrantes':                           '#4874e0',
-  'aranceles':                           '#4874e0',
-  'soberanía':                           '#4874e0',
-  // Actores políticos
-  'lópez obrador':                       '#f4b723',
-  'morena':                              '#f4b723',
-  'pan':                                 '#f4b723',
-  'pri':                                 '#f4b723',
-  'oposición':                           '#f4b723',
-  'cuarta transformación':               '#f4b723',
-  'corrupción':                          '#f4b723',
-  // Economía
-  'inflación':                           '#00ab8c',
-  'salario mínimo':                      '#00ab8c',
-  'inversiones':                         '#00ab8c',
-  // Salud
-  'medicamentos':                        '#5f2a91',
-  'imss bienestar':                      '#5f2a91',
-  'vacunas':                             '#5f2a91',
-  'insumos médicos':                     '#5f2a91',
-  'personal de salud':                   '#5f2a91',
-};
 // Orden de categorías en la leyenda + sort alfabético dentro de cada una
 const CAT_ORDER = ['politica','actores','economia','seguridad','salud','desapariciones'];
 const KEYWORD_CAT = {
