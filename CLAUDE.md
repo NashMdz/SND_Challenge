@@ -66,6 +66,27 @@ Keyword → category → color mapping:
 
 The app is **dark-only** — the light theme and `#theme-toggle` button have been removed. Background is pure black (`#000000`).
 
+## Worker (Cloudflare Workers)
+
+Source lives in [worker/src/index.js](worker/src/index.js), deployed via Wrangler (`worker/wrangler.toml`).
+
+**Endpoints:**
+- `GET /data` — scrolls all points from Qdrant, builds and returns the visualization dataset (1-hour in-memory cache)
+- `POST /query` — RAG pipeline: embed query with `gemini-embedding-001` → vector search in Qdrant (`SDN_Challenge_Desaparecidos` collection, top 15) → generate answer with `gemini-2.5-flash`
+- `GET /debug` — returns keyword/subject counts and field-validation stats (useful after re-ingestion)
+
+**Required Wrangler secrets:** `QDRANT_URL`, `QDRANT_API_KEY`, `GEMINI_API_KEY`
+
+```bash
+cd worker
+npx wrangler deploy        # deploy to production
+npx wrangler secret put QDRANT_URL
+```
+
+## Sankeys
+
+[Sankeys/](Sankeys/) contains 6 standalone HTML files (one per keyword category) for supplementary Sankey diagrams. They are independent of `index.html` and do not share any JS.
+
 ## Code Style
 
 - **Single-file structure** — preserve unless explicitly asked to refactor

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SND Challenge - Desaparecidos</title>
+<script>if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; window.scrollTo(0, 0);</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Kameron:wght@600&family=Noto+Sans:wght@300;600&display=swap');
@@ -71,7 +72,7 @@ body {
 
 /* ── STICKY WRAPPER ──────────────────────────────────── */
 #cw {
-  position: sticky; top: 69px; /* tab-bar ~33px + toolbar ~36px */
+  /* altura automática: chart-area + leg pegados, sin forzar 100vh */
   background: var(--bg); border-bottom: 1px solid var(--border);
   z-index: 10; overflow: hidden;
   display: flex; flex-direction: column;
@@ -123,7 +124,7 @@ select option { background: var(--surface); }
 }
 
 /* ── CHART AREA ──────────────────────────────────────── */
-#chart-area { position: relative; height: 500px; flex-shrink: 0; }
+#chart-area { position: relative; height: calc(100vh / 3); flex-shrink: 0; }
 #chart-area canvas { position: absolute; top: 0; left: 0; }
 
 /* ── LEYENDA ─────────────────────────────────────────── */
@@ -135,14 +136,14 @@ select option { background: var(--surface); }
   background: var(--bg); flex-shrink: 0; z-index: 5;
 }
 .li {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex; align-items: center; gap: 5px;
   cursor: pointer; transition: opacity .35s;
   font-family: 'Kameron', serif;
-  font-size: 17px; letter-spacing: 1.5px; text-transform: uppercase;
-  padding: 4px 11px; border-radius: 20px; white-space: nowrap;
+  font-size: 14px; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 20px; white-space: nowrap;
 }
 .ld { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.lt { font-size: 17px; letter-spacing: 1.5px; text-transform: uppercase; font-family: 'Kameron', serif; font-weight: 600; }
+.lt { font-size: 14px; letter-spacing: 1.5px; text-transform: uppercase; font-family: 'Kameron', serif; font-weight: 600; }
 
 /* ── CHAPTER (two-column scrollytelling) ───────────── */
 .chapter {
@@ -180,7 +181,7 @@ select option { background: var(--surface); }
 
 /* ── PAUSE CHAPTER (full-screen narrative break) ────── */
 .chapter-pause {
-  position: relative; z-index: 11; /* cubre #cw (z-index:10) al hacer scroll */
+  position: relative; z-index: 11;
   min-height: 100vh; padding: 10vh 8vw;
   border-top: 1px solid var(--border);
   display: flex; flex-direction: column; justify-content: center;
@@ -195,6 +196,16 @@ select option { background: var(--surface); }
                  color: var(--txt-mid); max-width: 620px; font-family: 'Noto Sans', sans-serif; font-weight: 300; }
 .pause-body p  { margin-bottom: 1.4em; font-family: 'Noto Sans', sans-serif; font-weight: 300; }
 .pause-rule    { width: 40px; height: 2px; background: var(--accent); margin: 40px 0; }
+
+/* ── SECTIONS (contenido estático debajo del chart) ──────── */
+#sections {
+  border-top: 1px solid var(--border);
+  flex: 1; overflow-y: auto; min-height: 0;
+}
+/* .chapter-left pega al top del scroll container interno */
+#sections .chapter-left {
+  top: 0;
+}
 
 @media (max-width: 700px) {
   .chapter { grid-template-columns: 1fr; }
@@ -269,7 +280,12 @@ select option { background: var(--surface); }
 .tab-btn.active { color: #ffffff; border-bottom-color: #ffffff; }
 
 /* ── PANELS ──────────────────────────────────────────── */
-#panel-explore { display: block; }
+#panel-explore {
+  display: flex; flex-direction: column;
+  position: sticky; top: 69px;
+  height: calc(100vh - 69px);
+  overflow: hidden;
+}
 #panel-query   { display: none; min-height: 100vh; padding: 24px 20px 60px; max-width: 780px; margin: 0 auto; }
 
 /* ── RAG INPUT ───────────────────────────────────────── */
@@ -340,8 +356,8 @@ select option { background: var(--surface); }
   #view-toggle button, #mode-toggle button { font-size: 8px; padding: 4px 6px; letter-spacing: 0.3px; }
   #stats { display: none; }
   #klbl  { display: none; }
-  #chart-area { height: 235px; }
-  #cw { top: 62px; }
+  #panel-explore { top: 62px; height: calc(100vh - 62px); }
+  #chart-area { height: calc(100vh / 3); }
   #leg { gap: 4px 10px; padding: 6px 10px; }
   .lt  { font-size: 8px; }
   #panel-query { padding: 16px 14px 60px; }
@@ -406,7 +422,7 @@ body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px
 
 /* ── ANÁLISIS DESAPARECIDOS ───────────────────────── */
 #analisis-desaparecidos {
-  position: relative; width: 100%; height: 200vh;
+  position: relative; width: 100%; height: 300vh;
   background: #000;
 }
 #ad-canvas {
@@ -447,7 +463,7 @@ body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px
 
 /* ── ANÁLISIS POLÍTICA EXTERIOR ───────────────────── */
 #analisis-politica-exterior {
-  position: relative; width: 100%; height: 200vh;
+  position: relative; width: 100%; height: 300vh;
   background: #000;
 }
 #ape-canvas {
@@ -488,7 +504,7 @@ body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px
 
 /* ── ANÁLISIS ACTORES POLÍTICOS ───────────────────── */
 #analisis-actores-politicos {
-  position: relative; width: 100%; height: 200vh;
+  position: relative; width: 100%; height: 300vh;
   background: #000;
 }
 #aap-canvas {
@@ -562,7 +578,7 @@ body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px
 
 /* ── ANÁLISIS SEGURIDAD PÚBLICA ──────────────────── */
 #analisis-seguridad-publica {
-  position: relative; width: 100%; height: 200vh;
+  position: relative; width: 100%; height: 300vh;
   background: #000;
 }
 #asp-canvas {
@@ -802,6 +818,7 @@ const SUBJECT_COLORS = {
   ];
 
   function showPanel(i) {
+    if (panels[i].classList.contains('active')) return;
     panels.forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
     panels[i].style.display = 'block';
     requestAnimationFrame(() => panels[i].classList.add('active'));
@@ -868,6 +885,7 @@ const SUBJECT_COLORS = {
     document.getElementById('adp-1'),
   ];
   function showPanel(i) {
+    if (panels[i].classList.contains('active')) return;
     panels.forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
     panels[i].style.display = 'block';
     requestAnimationFrame(() => panels[i].classList.add('active'));
@@ -899,9 +917,14 @@ const SUBJECT_COLORS = {
   let width, height, nodes, running = false;
 
   function resize() {
+    const sx = window.innerWidth  / (width  || window.innerWidth);
+    const sy = window.innerHeight / (height || window.innerHeight);
     width  = canvas.width  = window.innerWidth;
     height = canvas.height = window.innerHeight;
-    console.log('ad-canvas size:', width, height);
+    if (nodes) nodes.forEach(d => {
+      d.x = Math.min(Math.max(d.x * sx, 4), width  - 4);
+      d.y = Math.min(Math.max(d.y * sy, 4), height - 4);
+    });
   }
   window.addEventListener('resize', resize);
 
@@ -1017,6 +1040,7 @@ const SUBJECT_COLORS = {
     document.getElementById('apep-1'),
   ];
   function showPanel(i) {
+    if (panels[i].classList.contains('active')) return;
     panels.forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
     panels[i].style.display = 'block';
     requestAnimationFrame(() => panels[i].classList.add('active'));
@@ -1048,8 +1072,14 @@ const SUBJECT_COLORS = {
   let width, height, nodes, running = false;
 
   function resize() {
+    const sx = window.innerWidth  / (width  || window.innerWidth);
+    const sy = window.innerHeight / (height || window.innerHeight);
     width  = canvas.width  = window.innerWidth;
     height = canvas.height = window.innerHeight;
+    if (nodes) nodes.forEach(d => {
+      d.x = Math.min(Math.max(d.x * sx, 4), width  - 4);
+      d.y = Math.min(Math.max(d.y * sy, 4), height - 4);
+    });
   }
   window.addEventListener('resize', resize);
 
@@ -1162,6 +1192,7 @@ const SUBJECT_COLORS = {
     document.getElementById('aacp-1'),
   ];
   function showPanel(i) {
+    if (panels[i].classList.contains('active')) return;
     panels.forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
     panels[i].style.display = 'block';
     requestAnimationFrame(() => panels[i].classList.add('active'));
@@ -1193,8 +1224,14 @@ const SUBJECT_COLORS = {
   let width, height, nodes, running = false;
 
   function resize() {
+    const sx = window.innerWidth  / (width  || window.innerWidth);
+    const sy = window.innerHeight / (height || window.innerHeight);
     width  = canvas.width  = window.innerWidth;
     height = canvas.height = window.innerHeight;
+    if (nodes) nodes.forEach(d => {
+      d.x = Math.min(Math.max(d.x * sx, 4), width  - 4);
+      d.y = Math.min(Math.max(d.y * sy, 4), height - 4);
+    });
   }
   window.addEventListener('resize', resize);
 
@@ -1307,6 +1344,7 @@ const SUBJECT_COLORS = {
     document.getElementById('aspp-1'),
   ];
   function showPanel(i) {
+    if (panels[i].classList.contains('active')) return;
     panels.forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
     panels[i].style.display = 'block';
     requestAnimationFrame(() => panels[i].classList.add('active'));
@@ -1338,8 +1376,14 @@ const SUBJECT_COLORS = {
   let width, height, nodes, running = false;
 
   function resize() {
+    const sx = window.innerWidth  / (width  || window.innerWidth);
+    const sy = window.innerHeight / (height || window.innerHeight);
     width  = canvas.width  = window.innerWidth;
     height = canvas.height = window.innerHeight;
+    if (nodes) nodes.forEach(d => {
+      d.x = Math.min(Math.max(d.x * sx, 4), width  - 4);
+      d.y = Math.min(Math.max(d.y * sy, 4), height - 4);
+    });
   }
   window.addEventListener('resize', resize);
 
@@ -1457,8 +1501,14 @@ const SUBJECT_COLORS = {
   let width, height, nodes, running = false;
 
   function resize() {
+    const sx = window.innerWidth  / (width  || window.innerWidth);
+    const sy = window.innerHeight / (height || window.innerHeight);
     width  = canvas.width  = window.innerWidth;
     height = canvas.height = window.innerHeight;
+    if (nodes) nodes.forEach(d => {
+      d.x = Math.min(Math.max(d.x * sx, 4), width  - 4);
+      d.y = Math.min(Math.max(d.y * sy, 4), height - 4);
+    });
   }
   window.addEventListener('resize', resize);
 
@@ -1562,8 +1612,14 @@ const SUBJECT_COLORS = {
   let width, height, nodes, running = false;
 
   function resize() {
+    const sx = window.innerWidth  / (width  || window.innerWidth);
+    const sy = window.innerHeight / (height || window.innerHeight);
     width  = canvas.width  = window.innerWidth;
     height = canvas.height = window.innerHeight;
+    if (nodes) nodes.forEach(d => {
+      d.x = Math.min(Math.max(d.x * sx, 4), width  - 4);
+      d.y = Math.min(Math.max(d.y * sy, 4), height - 4);
+    });
   }
   window.addEventListener('resize', resize);
 
@@ -1659,8 +1715,14 @@ const SUBJECT_COLORS = {
   let width, height, nodes, running = false;
 
   function resize() {
+    const sx = window.innerWidth  / (width  || window.innerWidth);
+    const sy = window.innerHeight / (height || window.innerHeight);
     width  = canvas.width  = window.innerWidth;
     height = canvas.height = window.innerHeight;
+    if (nodes) nodes.forEach(d => {
+      d.x = Math.min(Math.max(d.x * sx, 4), width  - 4);
+      d.y = Math.min(Math.max(d.y * sy, 4), height - 4);
+    });
   }
   window.addEventListener('resize', resize);
 
@@ -1739,8 +1801,14 @@ const KEYWORD_COLORS = {
   let width, height, nodes;
 
   function resize() {
+    const sx = window.innerWidth  / (width  || window.innerWidth);
+    const sy = window.innerHeight / (height || window.innerHeight);
     width  = canvas.width  = window.innerWidth;
     height = canvas.height = window.innerHeight;
+    if (nodes) nodes.forEach(d => {
+      d.x = Math.min(Math.max(d.x * sx, 4), width  - 4);
+      d.y = Math.min(Math.max(d.y * sy, 4), height - 4);
+    });
   }
 
   window.addEventListener('resize', resize);
@@ -1863,8 +1931,61 @@ const KEYWORD_COLORS = {
   <div id="chart-area"></div>
   <div id="leg"></div>
 </div>
-<div id="sections"></div>
-<div style="height: 480px;"></div>
+<div id="sections">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTIONS — contenido estático, editar directamente aquí.
+       Estructura: .chapter  →  .chapter-left (título fijo ~25%)
+                              →  .chapter-right (pasos que hacen scroll)
+       Agrega más bloques .chapter para más secciones.
+       ═══════════════════════════════════════════════════════════ -->
+
+  <!-- SECCIÓN 1 -->
+  <div class="chapter">
+    <div class="chapter-left">
+      <div class="chap-tag" style="color:#ffffff">Sección 1</div>
+      <div class="chap-title" style="color:#ffffff">Título de la sección</div>
+      <div class="chap-desc">Descripción breve que contextualiza este bloque temático.</div>
+    </div>
+    <div class="chapter-right">
+      <div class="step step--active">
+        <div class="step-eyebrow">01 — Paso</div>
+        <div class="step-text">Texto del primer paso. Aquí va el contenido principal de este bloque.</div>
+      </div>
+      <div class="step">
+        <div class="step-eyebrow">02 — Paso</div>
+        <div class="step-text">Texto del segundo paso. Puede incluir citas, datos o análisis.</div>
+        <blockquote class="step-quote">"Ejemplo de cita textual que complementa el análisis."</blockquote>
+        <div class="step-meta">Fecha · Fuente</div>
+      </div>
+      <div class="step">
+        <div class="step-eyebrow">03 — Paso</div>
+        <div class="step-text">Texto del tercer paso.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 2 -->
+  <div class="chapter">
+    <div class="chapter-left">
+      <div class="chap-tag" style="color:#ffffff">Sección 2</div>
+      <div class="chap-title" style="color:#ffffff">Otro bloque temático</div>
+      <div class="chap-desc">Descripción de la segunda sección.</div>
+    </div>
+    <div class="chapter-right">
+      <div class="step step--active">
+        <div class="step-eyebrow">01 — Paso</div>
+        <div class="step-text">Primer paso de la segunda sección.</div>
+      </div>
+      <div class="step">
+        <div class="step-eyebrow">02 — Paso</div>
+        <div class="step-text">Segundo paso de la segunda sección.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+</div>
 </div><!-- /panel-explore -->
 
 <!-- ── PANEL CONSULTAR ───────────────────────────── -->
@@ -2122,6 +2243,7 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
   let viewMode   = 'month';
   let navMode    = 'kw';
   let curKw      = -99;
+  const selectedKws = new Set(); // índices de keywords seleccionadas en la leyenda
   let curMo      = -99;
   let dayStackMo         = -1;
   let _dayAxisParams     = null;
@@ -2177,98 +2299,7 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
     ];
   }
 
-  function renderSections() {
-    secEl.innerHTML = '';
-    // En modo kw filtrar secciones según topNFilter (excluir keywords fuera del top N)
-    const baseList = navMode === 'kw' ? SECS : SECS_TIME;
-    const list = navMode === 'kw'
-      ? baseList.filter(s => s.type !== 'kw' || s.kw === -1 || s.kw < topNFilter)
-      : baseList;
-    const isTime = navMode === 'time';
-    let chapN = 0;
-
-    list.forEach((s, secIdx) => {
-      let el;
-
-      if (s.type === 'pause') {
-        el = document.createElement('div');
-        el.className = 'chapter-pause';
-        el.dataset.secIdx = secIdx;
-        el.innerHTML = `
-          <div class="pause-eyebrow">${s.eyebrow || ''}</div>
-          <div class="pause-title">${s.title}</div>
-          <div class="pause-rule"></div>
-          <div class="pause-body">${s.body}</div>`;
-
-      } else {
-        chapN++;
-        const dispNum = String(chapN).padStart(2, '0');
-        const isBeat  = s.type === 'beat';
-
-        // Accent color for this chapter
-        let c;
-        if (isTime)       c = '#00e5a0';
-        else if (s.kw>=0) c = CL(s.kw);
-        else              c = '#ffffff';
-
-        el = document.createElement('div');
-        el.className = 'chapter' + (isTime ? ' chapter--time' : '');
-        el.dataset.secIdx = secIdx;
-        el.dataset.type   = s.type;
-        if (s.kw !== undefined) el.dataset.kw = s.kw;
-        if (s.mo !== undefined) el.dataset.mo = s.mo;
-        el.style.borderLeftColor = `${c}44`;
-
-        // LEFT COLUMN
-        let leftHtml;
-        if (isBeat) {
-          const beat = STORY_BEATS[s.beatIdx];
-          leftHtml = `
-            <div class="chap-num">${dispNum}</div>
-            <div class="chap-tag" style="color:${c}">Declaración destacada</div>
-            <div class="chap-title" style="color:${c}">${beat?.label || ''}</div>
-            <div class="chap-desc">${beat?.note || ''}</div>`;
-        } else {
-          leftHtml = `
-            <div class="chap-num">${dispNum}</div>
-            <div class="chap-tag" style="color:${c}">${s.tag || ''}</div>
-            <div class="chap-title" style="color:${c}">${s.title || ''}</div>
-            <div class="chap-desc">${s.body || ''}</div>`;
-        }
-
-        // RIGHT COLUMN — steps
-        let stepsHtml;
-        if (isBeat) {
-          const beat    = STORY_BEATS[s.beatIdx];
-          const beatDot = beat ? dots.find(d => d.storyIdx === s.beatIdx) : null;
-          stepsHtml = `<div class="step" data-sec-idx="${secIdx}" data-dot-id="${beatDot?.id ?? -1}">
-            <div class="step-eyebrow">Declaración destacada</div>
-            <div class="step-text">${beat?.note || ''}</div>
-            ${beatDot ? `<blockquote class="step-quote">"${beatDot.frase.slice(0,130)}${beatDot.frase.length>130?'…':''}"</blockquote>` : ''}
-            <div class="step-meta">${beat?.fecha || ''}</div>
-          </div>`;
-        } else {
-          const steps = makeStepsForSection(s.type, s.kw ?? -1, s.mo ?? -1);
-          stepsHtml = steps.map(st => `
-            <div class="step" data-sec-idx="${secIdx}" data-dot-id="${st.dotId ?? -1}">
-              <div class="step-eyebrow">${st.num}</div>
-              <div class="step-text">${st.text}</div>
-              ${st.quote ? `<blockquote class="step-quote">${st.quote}</blockquote>` : ''}
-              ${st.meta  ? `<div class="step-meta">${st.meta}</div>` : ''}
-            </div>`).join('');
-        }
-
-        el.innerHTML = `
-          <div class="chapter-left">${leftHtml}</div>
-          <div class="chapter-right">${stepsHtml}</div>`;
-      }
-
-      el.dataset.secIdx = secIdx;
-      secEl.appendChild(el);
-    });
-
-    setupStepObserver();
-  }
+  function renderSections() { /* contenido estático definido en el HTML — ver #sections */ }
 
   renderSections();
 
@@ -2317,7 +2348,7 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
       const { r, g, b } = hexRgb(kwCol);
       li.style.background = `rgba(${r},${g},${b},0.13)`;
       li.innerHTML=`<div class="ld" style="background:${kwCol}"></div><span class="lt" style="color:${kwCol}">${kw}</span>`;
-      li.onclick = () => { sel.value=i; applyFilter(i); };
+      li.onclick = () => toggleLegendKw(i);
       leg.appendChild(li);
     });
   }
@@ -2748,6 +2779,7 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
 
   /* ── Filter ──────────────────────────────────────── */
   function applyFilter(kw) {
+    selectedKws.clear(); // reset multi-select cuando se llama desde fuera de la leyenda
     if (kw===curKw) return; curKw=kw;
     const lbl = document.getElementById('klbl');
     lbl.textContent = kw>=0 ? KW[kw] : '';
@@ -2807,6 +2839,73 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
       ch.style.borderLeftColor = isActive ? '' : (chKw >= 0 ? `${CL(chKw)}33` : 'transparent');
     });
     chartEl._wake?.(kw);
+  }
+
+  /* ── Filtro multi-keyword (desde leyenda) ────────────── */
+  function applyFilterMulti() {
+    curKw = -2; // sentinel: multi-selección activa
+    const lbl = document.getElementById('klbl');
+    lbl.textContent = `${selectedKws.size} keywords`;
+    lbl.style.color = '#ffffff';
+
+    if (navMode === 'time') {
+      const mo = curMo;
+      const cW = chartEl.clientWidth, cH = chartEl.clientHeight;
+      dots.forEach(d => {
+        if (d.mi !== mo || !okKw(d) || !selectedKws.has(d.ki)) {
+          d.targetAlpha = 0; d.delay = 0;
+        }
+      });
+      const active = dots.filter(d => d.mi === mo && okKw(d) && selectedKws.has(d.ki))
+        .sort((a, b) => a.tx - b.tx);
+      active.forEach((d, i) => {
+        const offsetX = (d.tx - cW * 0.5) * 0.65;
+        d.cx = d.tx + offsetX + (Math.random()-0.5)*40;
+        d.cy = -cH * 0.1 - Math.random()*cH*0.15;
+        d.alpha = 0; d.targetAlpha = 210;
+        d.delay = Math.floor(i / active.length * 75);
+      });
+    } else {
+      const cW = chartEl.clientWidth, cH = chartEl.clientHeight;
+      dots.forEach(d => {
+        if (!selectedKws.has(d.ki)) { d.targetAlpha = okKw(d) ? 18 : 0; d.delay = 0; }
+      });
+      const active = dots.filter(d => selectedKws.has(d.ki) && okKw(d)).sort((a, b) => a.tx - b.tx);
+      active.forEach((d, i) => {
+        const offsetX = (d.tx - cW * 0.5) * 0.65;
+        d.cx = d.tx + offsetX + (Math.random()-0.5)*40;
+        d.cy = -cH * 0.1 - Math.random()*cH*0.15;
+        d.alpha = 0; d.targetAlpha = 210;
+        d.delay = Math.floor(i / active.length * 75);
+      });
+      dots.filter(d => selectedKws.has(d.ki) && !okKw(d)).forEach(d => { d.targetAlpha = 0; d.delay = 0; });
+    }
+    KW.forEach((_, i) => {
+      const e = document.getElementById(`li${i}`);
+      if (e) e.style.opacity = selectedKws.has(i) ? 1 : 0.22;
+    });
+    chartEl._wake?.(-1);
+  }
+
+  function toggleLegendKw(i) {
+    if (selectedKws.has(i)) {
+      selectedKws.delete(i);
+    } else {
+      selectedKws.add(i);
+    }
+    if (selectedKws.size === 0) {
+      // Des-selección total → mostrar todo
+      curKw = -99;
+      applyFilter(-1);
+    } else if (selectedKws.size === 1) {
+      // Una sola seleccionada → usa applyFilter normal
+      curKw = -99;
+      applyFilter([...selectedKws][0]);
+    } else {
+      // Múltiple selección
+      applyFilterMulti();
+    }
+    sel.value = selectedKws.size === 1 ? [...selectedKws][0] : -1;
   }
 
   /* ── Cambio de top-N (sin re-animar posición) ──────── */
@@ -2892,7 +2991,7 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
   function switchNavMode(mode) {
     if (mode===navMode) return;
     navMode=mode;
-    curKw=-99; curMo=-99; dayStackMo=-1; curChapterSecIdx=-1;
+    curKw=-99; curMo=-99; dayStackMo=-1; curChapterSecIdx=-1; selectedKws.clear();
     cwEl.style.opacity = '1'; cwEl.style.pointerEvents = ''; cwEl.style.transform = '';
     document.getElementById('btn-kw').classList.toggle('active',   mode==='kw');
     document.getElementById('btn-time').classList.toggle('active', mode==='time');
@@ -3114,23 +3213,421 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
 (function () {
   const note = document.getElementById('dot-note');
   function update() {
-    const welcome = document.getElementById('welcome');
-    const rect = welcome.getBoundingClientRect();
-    if (rect.bottom <= 0) {
-      note.classList.add('visible');
+    const vh = window.innerHeight;
+    // Ocultar cuando el toolbar del explorador entra en el viewport
+    const toolbar = document.getElementById('toolbar');
+    if (toolbar && toolbar.getBoundingClientRect().top < vh) {
+      note.classList.remove('visible');
       return;
     }
-    if (rect.top >= window.innerHeight) {
+    const welcome = document.getElementById('welcome');
+    const rect = welcome.getBoundingClientRect();
+    if (rect.top >= vh) {
       note.classList.remove('visible');
       return;
     }
     const scrolled = -rect.top;
-    const vh = window.innerHeight;
     note.classList.toggle('visible', scrolled >= vh * 0.6);
   }
   window.addEventListener('scroll', update, { passive: true });
   update();
 })();
 </script>
+
+<!-- ══ STORY NAV + DEBUG ════════════════════════════════ -->
+<style>
+/* ── Story nav ─────────────────────────────────────────── */
+#story-nav {
+  display: none; position: fixed; bottom: 28px; left: 50%;
+  transform: translateX(-50%); z-index: 9000;
+  align-items: center; gap: 12px;
+  background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 40px; padding: 8px 20px;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  pointer-events: auto; width: max-content;
+}
+.snav-btn {
+  background: none; border: none; color: rgba(255,255,255,0.45);
+  font-size: 15px; cursor: pointer; padding: 2px 4px;
+  transition: color .2s; line-height: 1; flex-shrink: 0;
+}
+.snav-btn:hover:not(:disabled) { color: #fff; }
+.snav-btn:disabled { color: rgba(255,255,255,0.12); cursor: default; }
+#snav-dots { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.snav-dot {
+  width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(255,255,255,0.18); transition: background .3s, transform .25s;
+  cursor: pointer;
+}
+.snav-dot:hover   { background: rgba(255,255,255,0.5); }
+.snav-dot.visited { background: rgba(255,255,255,0.38); }
+.snav-dot.current { background: rgba(255,255,255,0.92); transform: scale(1.5); }
+#snav-label {
+  font-family: 'Kameron', serif; font-weight: 600;
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.6); white-space: nowrap;
+  min-width: 90px; text-align: center; flex-shrink: 0;
+}
+#snav-explore {
+  display: none; background: none;
+  border: none; border-left: 1px solid rgba(255,255,255,0.15);
+  padding: 2px 0 2px 12px; margin-left: 2px;
+  font-family: 'Kameron', serif; font-weight: 600;
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,0.55); cursor: pointer; white-space: nowrap;
+  transition: color .2s;
+}
+#snav-explore:hover { color: rgba(255,255,255,0.9); }
+
+/* ── Debug overlay ─────────────────────────────────────── */
+#dbg-overlay {
+  display: none; position: fixed; bottom: 0; right: 0;
+  width: 430px; height: 64vh;
+  background: rgba(0,0,0,0.95); border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 8px 0 0 0; z-index: 99999;
+  flex-direction: column; font-family: monospace; font-size: 11px;
+  color: rgba(255,255,255,0.85); overflow: hidden;
+  box-shadow: -4px -4px 24px rgba(0,0,0,0.6);
+}
+#dbg-info-wrap { flex-shrink: 0; padding: 10px 12px 4px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+#dbg-log-wrap  { flex: 1; overflow-y: auto; padding: 6px 12px 10px; overscroll-behavior: contain; }
+.dbg-row { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; line-height: 1.5; }
+.dbg-l { color: rgba(255,255,255,0.42); white-space: nowrap; }
+.dbg-v { color: #fff; text-align: right; word-break: break-all; }
+.dbg-sep { border-top: 1px solid rgba(255,255,255,0.1); margin: 6px 0; }
+#dbg-log-title { color: rgba(255,255,255,0.32); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 2px 0 4px; }
+.dbg-log-entry { color: rgba(255,200,90,0.78); padding: 1px 0; font-size: 10px; }
+#dbg-badge {
+  display: none; position: fixed; top: 0; left: 0;
+  background: rgba(0,0,0,0.88); border-right: 1px solid rgba(0,255,100,0.4);
+  border-bottom: 1px solid rgba(0,255,100,0.4);
+  color: rgba(0,255,100,0.9); font-family: monospace; font-size: 11px;
+  padding: 5px 12px; z-index: 99999; border-radius: 0 0 6px 0;
+  pointer-events: none; letter-spacing: 0.5px; line-height: 1.7;
+}
+</style>
+
+<div id="story-nav">
+  <button class="snav-btn" id="snav-prev">&#8592;</button>
+  <div id="snav-dots"></div>
+  <button class="snav-btn" id="snav-next">&#8594;</button>
+  <button id="snav-explore">Explora los datos</button>
+</div>
+
+<div id="dbg-overlay">
+  <div id="dbg-info-wrap"><div id="dbg-info"></div></div>
+  <div id="dbg-log-wrap">
+    <div id="dbg-log-title">Scroll Log</div>
+    <div id="dbg-log"></div>
+  </div>
+</div>
+<div id="dbg-badge"></div>
+
+<script>
+/* ══ STORY NAV ══════════════════════════════════════════ */
+(function () {
+  'use strict';
+
+  // Definición de secciones: cada section + cuántos paneles tiene y sus umbrales
+  const DEFS = [
+    { id: 'welcome',                    label: 'Introducción',   panels: 3, th: [0.6, 1.6] },
+    { id: 'analisis-desaparecidos',     label: 'Desapariciones', panels: 2, th: [0.6] },
+    { id: 'analisis-politica-exterior', label: 'Pol. exterior',  panels: 2, th: [0.6] },
+    { id: 'analisis-actores-politicos', label: 'Actores',        panels: 2, th: [0.6] },
+    { id: 'analisis-seguridad-publica', label: 'Seguridad',      panels: 2, th: [0.6] },
+    { id: 'analisis-economia',          label: 'Economía',       panels: 1, th: [] },
+    { id: 'analisis-salud',             label: 'Salud',          panels: 1, th: [] },
+    { id: 'conclusiones',               label: 'Conclusiones',   panels: 1, th: [] },
+  ];
+
+  // Lista plana de pasos: 3+2+2+2+1+2+1+1 = 14
+  const STEPS = [];
+  DEFS.forEach(def => {
+    for (let p = 0; p < def.panels; p++) {
+      STEPS.push({
+        sectionId:    def.id,
+        sectionLabel: def.label,
+        panelIndex:   p,
+        panelCount:   def.panels,
+        // cuántos px (como fracción de vh) scrollear dentro de la sección para llegar a este panel
+        scrollFraction: p === 0 ? 0 : (def.th[p - 1] ?? 0) + 0.2,
+        th: def.th,
+      });
+    }
+  });
+
+  const navEl      = document.getElementById('story-nav');
+  const btnPrev    = document.getElementById('snav-prev');
+  const btnNext    = document.getElementById('snav-next');
+  const dotsEl     = document.getElementById('snav-dots');
+  const exploreBtn = document.getElementById('snav-explore');
+
+  // 8 puntos, uno por sección
+  DEFS.forEach((def, i) => {
+    const dot = document.createElement('span');
+    dot.className  = 'snav-dot';
+    dot.title      = def.label;
+    dot.dataset.si = i;
+    dot.addEventListener('click', () => {
+      const first = STEPS.findIndex(s => s.sectionId === def.id);
+      if (first >= 0) goToStep(first);
+    });
+    dotsEl.appendChild(dot);
+  });
+
+  function getCurrentStep() {
+    const vh = window.innerHeight;
+    let lastValid = 0;
+    for (let si = 0; si < DEFS.length; si++) {
+      const def = DEFS[si];
+      const el  = document.getElementById(def.id);
+      if (!el) continue;
+      const rect = el.getBoundingClientRect();
+      if (rect.top > vh * 0.5) break;
+      const scrolled = -rect.top;
+      let panel = 0;
+      def.th.forEach((t, ti) => { if (scrolled >= t * vh) panel = ti + 1; });
+      for (let fi = 0; fi < STEPS.length; fi++) {
+        if (STEPS[fi].sectionId === def.id && STEPS[fi].panelIndex === panel) {
+          lastValid = fi; break;
+        }
+      }
+    }
+    return lastValid;
+  }
+
+  function inRange() {
+    const vh = window.innerHeight;
+    const w  = document.getElementById('welcome');
+    const c  = document.getElementById('conclusiones');
+    if (!w || !c) return false;
+    return w.getBoundingClientRect().top <= vh * 0.1 &&
+           c.getBoundingClientRect().bottom > 0;
+  }
+
+  function goToStep(idx) {
+    const s   = STEPS[Math.max(0, Math.min(STEPS.length - 1, idx))];
+    const el  = document.getElementById(s.sectionId);
+    const vh  = window.innerHeight;
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: top + s.scrollFraction * vh, behavior: 'instant' });
+  }
+
+  function updateNav() {
+    const show = inRange();
+    navEl.style.display = show ? 'flex' : 'none';
+    if (!show) return;
+
+    const curr   = getCurrentStep();
+    const step   = STEPS[curr];
+    const secIdx = DEFS.findIndex(d => d.id === step.sectionId);
+
+    dotsEl.querySelectorAll('.snav-dot').forEach((dot, i) => {
+      dot.classList.toggle('current', i === secIdx);
+      dot.classList.toggle('visited', i < secIdx);
+    });
+
+    btnPrev.disabled = curr === 0;
+    btnNext.disabled = curr === STEPS.length - 1;
+
+    // "Explora los datos" solo en conclusiones
+    const atEnd = curr === STEPS.length - 1;
+    exploreBtn.style.display = atEnd ? 'inline-block' : 'none';
+  }
+
+  btnPrev.addEventListener('click', () => goToStep(getCurrentStep() - 1));
+  btnNext.addEventListener('click', () => goToStep(getCurrentStep() + 1));
+
+  exploreBtn.addEventListener('click', () => {
+    const tabBar = document.getElementById('tab-bar');
+    if (tabBar) {
+      const top = tabBar.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  });
+
+  // En resize, refrescar cálculos y re-evaluar paneles visibles
+  window.addEventListener('resize', () => {
+    updateNav();
+    window.dispatchEvent(new Event('scroll'));
+  });
+  window.addEventListener('scroll', updateNav, { passive: true });
+  updateNav();
+
+  window._storyNav = { STEPS, DEFS, getCurrentStep, goToStep };
+})();
+
+/* ══ DEBUG OVERLAY (tecla D) ════════════════════════════ */
+(function () {
+  'use strict';
+  let active = false;
+  const scrollLog = [];
+  const overlay   = document.getElementById('dbg-overlay');
+  const badge     = document.getElementById('dbg-badge');
+  const logWrap   = document.getElementById('dbg-log-wrap');
+
+  // Scroll interno del log no propaga a la página
+  logWrap.addEventListener('wheel',     e => e.stopPropagation(), { passive: true });
+  logWrap.addEventListener('touchmove', e => e.stopPropagation(), { passive: true });
+
+  function getSectionInfo() {
+    const nav = window._storyNav;
+    if (!nav) return null;
+    const vh      = window.innerHeight;
+    const stepIdx = nav.getCurrentStep();
+    const step    = nav.STEPS[stepIdx];
+    const section = document.getElementById(step.sectionId);
+    const rect    = section.getBoundingClientRect();
+    const scrolled = -rect.top;
+    const sectionH = section.offsetHeight;
+
+    // Triggers de la sección welcome siempre los mostramos para diagnóstico
+    const sts = ['st-0', 'st-1', 'st-2'].map(id => {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { id, h: el.offsetHeight, offsetTop: el.offsetTop, screenTop: r.top };
+    });
+
+    return { vh, scrolled, sectionH, step, stepIdx, total: nav.STEPS.length, sts };
+  }
+
+  function row(lbl, val) {
+    return `<div class="dbg-row"><span class="dbg-l">${lbl}</span><span class="dbg-v">${val}</span></div>`;
+  }
+
+  function render() {
+    if (!active) return;
+    const d = getSectionInfo();
+    if (!d) return;
+    const maxScroll = d.sectionH - d.vh;
+
+    let thRows = '';
+    d.step.th.forEach((t, i) => {
+      const here = i === d.step.panelIndex - 1;
+      thRows += row(
+        `umbral ${i}→${i + 1}`,
+        `${(d.vh * t).toFixed(0)}px (${t}×vh)${here ? ' <span style="color:#0f0">◀</span>' : ''}`
+      );
+    });
+
+    document.getElementById('dbg-info').innerHTML =
+      row('step',          `<b style="color:#0f0">${d.stepIdx + 1} / ${d.total}</b>`) +
+      row('sección',       `<b>${d.step.sectionId}</b>`) +
+      row('panel',         `<b style="color:#0f0">${d.step.panelIndex + 1} / ${d.step.panelCount}</b>`) +
+      '<div class="dbg-sep"></div>' +
+      row('viewport',      `${d.vh}px`) +
+      row('section h',     `${d.sectionH}px = ${(d.sectionH / d.vh).toFixed(2)}vh`) +
+      row('max scroll',    `${maxScroll}px = ${(maxScroll / d.vh).toFixed(2)}vh`) +
+      row('scrolled',      `${d.scrolled.toFixed(0)}px = <b>${(d.scrolled / d.vh).toFixed(3)}vh</b>`) +
+      thRows +
+      (d.step.sectionId === 'welcome'
+        ? '<div class="dbg-sep"></div>' + d.sts.map(st => st
+            ? row(`#${st.id}`, `h:${st.h}px · offsetTop:${st.offsetTop}px · screenTop:${st.screenTop.toFixed(0)}px`)
+            : '').join('')
+        : '');
+
+    const logEl    = document.getElementById('dbg-log');
+    const atBottom = logWrap.scrollHeight - logWrap.scrollTop <= logWrap.clientHeight + 4;
+    logEl.innerHTML = scrollLog.map(l => `<div class="dbg-log-entry">${l}</div>`).join('');
+    if (atBottom) logWrap.scrollTop = logWrap.scrollHeight;
+
+    badge.innerHTML =
+      `[D] ${d.step.sectionId} · p${d.step.panelIndex + 1}/${d.step.panelCount} · step ${d.stepIdx + 1}/${d.total}<br>` +
+      `scroll ${d.scrolled.toFixed(0)}/${d.sectionH}px · vh ${d.vh}px`;
+  }
+
+  function onScroll() {
+    const d = getSectionInfo();
+    if (!d) return;
+    scrollLog.push(
+      `[${d.step.sectionId} p${d.step.panelIndex}] ` +
+      `${d.scrolled.toFixed(0)}px (${(d.scrolled / d.vh).toFixed(3)}vh)`
+    );
+    render();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'd' && e.key !== 'D') return;
+    const tag = document.activeElement.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    active = !active;
+    overlay.style.display = active ? 'flex' : 'none';
+    badge.style.display   = active ? 'block' : 'none';
+    if (active) render();
+  });
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', render);
+})();
+</script>
+
+<!-- ── LAYOUT METER (tecla M) ─────────────────────────────────────── -->
+<div id="layout-meter" style="
+  display: none; position: fixed; bottom: 72px; right: 16px; z-index: 9999;
+  background: #111; border: 1px solid #444; border-radius: 6px;
+  padding: 16px 20px; min-width: 300px; font-family: monospace; font-size: 12px; color: #eee;
+  box-shadow: 0 4px 24px rgba(0,0,0,.7);">
+  <div style="font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 14px;">
+    Layout Meter <span style="color:#555; font-size:9px;">[M] cierra</span>
+  </div>
+
+  <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:10px;">
+    <span style="color:#aaa; white-space:nowrap;">canvas height</span>
+    <input type="range" id="lm-ca" min="100" max="800" step="1" style="flex:1;">
+    <span id="lm-ca-val" style="color:#0f0; width:50px; text-align:right;"></span>
+  </label>
+
+  <div style="display:flex; justify-content:space-between; margin-bottom:14px; font-size:11px;">
+    <span style="color:#666;">legend height</span>
+    <span id="lm-leg-val" style="color:#888;"></span>
+  </div>
+
+  <div style="color:#555; font-size:10px; line-height:1.8; border-top:1px solid #333; padding-top:10px;">
+    CSS a copiar:<br>
+    <span id="lm-css" style="color:#ff0; word-break:break-all;"></span>
+  </div>
+</div>
+
+<script>
+(function () {
+  const meter  = document.getElementById('layout-meter');
+  const caEl   = document.getElementById('chart-area');
+  const legEl  = document.getElementById('leg');
+
+  const sliderCa = document.getElementById('lm-ca');
+  const valCa    = document.getElementById('lm-ca-val');
+  const valLeg   = document.getElementById('lm-leg-val');
+  const cssOut   = document.getElementById('lm-css');
+
+  function apply() {
+    const ca = +sliderCa.value;
+    if (caEl) caEl.style.height = ca + 'px';
+    const legH = legEl ? Math.round(legEl.getBoundingClientRect().height) : '?';
+    valCa.textContent  = ca + 'px';
+    valLeg.textContent = legH + 'px';
+    cssOut.textContent = `#chart-area { height: ${ca}px }`;
+    // forzar redraw del canvas p5
+    window.dispatchEvent(new Event('resize'));
+  }
+
+  function open() {
+    const caH = caEl ? Math.round(caEl.getBoundingClientRect().height) : 500;
+    sliderCa.value = caH;
+    apply();
+    meter.style.display = 'block';
+  }
+
+  sliderCa.addEventListener('input', apply);
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'm' && e.key !== 'M') return;
+    const tag = document.activeElement.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (meter.style.display === 'none') open(); else meter.style.display = 'none';
+  });
+})();
+</script>
+
 </body>
 </html>
