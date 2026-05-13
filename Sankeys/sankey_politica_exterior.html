@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Mañaneras · Política exterior</title>
+<style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}</style>
+</head>
+<body>
+<div id="sk"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-sankey/0.12.3/d3-sankey.min.js"></script>
+<script>
+const FILL="#4874e0",BORDER="none",BW=0,LOPAC=0.40;
+const LABEL="Política exterior";
+const TOTAL_GLOBAL=7567;
+const TOTAL_SUBJECT=3505;
+const rows=[{kw:"Estados Unidos",f:2516},{kw:"Trump",f:466},{kw:"aranceles",f:399},{kw:"soberanía",f:294},{kw:"migrantes",f:177}];
+const n=rows.length;
+const W=900, H=425;
+const MT=28, MB=28;
+// ── RIGHT SANKEY: subject (full height) → keywords ──────────────
+const rNodes=[
+  {id:0, type:"subject"},
+  ...rows.map((r,i)=>({id:1+i, kw:r.kw, f:r.f, type:"kw"})),
+];
+const rLinks=rows.map((r,i)=>({source:0, target:1+i, value:r.f}));
+const COL1_X0=148, COL1_W=11, COL1_X1=COL1_X0+COL1_W;
+const COL2_X0=355, COL2_W=11, COL2_X1=COL2_X0+COL2_W;
+const sankey=d3.sankey()
+  .nodeId(d=>d.id).nodeWidth(COL2_W).nodePadding(14).nodeSort(null)
+  .extent([[COL2_X0, MT],[620, H-MB]]);
+const g=sankey({nodes:rNodes.map(d=>({...d})),links:rLinks.map(d=>({...d}))});
+const subNode=g.nodes.find(d=>d.type==="subject");
+const svg=d3.select("#sk").append("svg")
+  .attr("viewBox","0 0 "+W+" "+H).attr("width","100%");
+// ── COL 1: manual full-height rect ───────────────────────────────
+svg.append("rect")
+  .attr("x",COL1_X0).attr("y",MT).attr("width",COL1_W)
+  .attr("height",H-MT-MB).attr("fill",FILL).attr("rx",2);
+// ── PROPORTIONAL LINK col1 → col2 ────────────────────────────────
+// Band on col1 right edge, centered, height proportional to subject/global
+const col1H = H-MT-MB;
+const bandH = Math.max(1,(TOTAL_SUBJECT/TOTAL_GLOBAL)*col1H);
+const bandY0 = MT + (col1H - bandH)/2;
+const bandY1 = bandY0 + bandH;
+const sY0=subNode.y0, sY1=subNode.y1;
+const midX=(COL1_X1+COL2_X0)/2;
+const linkPath=`M${COL1_X1},${bandY0} C${midX},${bandY0} ${midX},${sY0} ${COL2_X0},${sY0}
+  L${COL2_X0},${sY1} C${midX},${sY1} ${midX},${bandY1} ${COL1_X1},${bandY1} Z`;
+svg.append("path").attr("d",linkPath)
+  .attr("fill",FILL).attr("fill-opacity",LOPAC);
+// ── COL 2: subject rect (full height from sankey) ────────────────
+svg.append("rect")
+  .attr("x",subNode.x0).attr("y",subNode.y0)
+  .attr("width",subNode.x1-subNode.x0)
+  .attr("height",subNode.y1-subNode.y0)
+  .attr("fill",FILL).attr("stroke",BORDER).attr("stroke-width",BW).attr("rx",2);
+// ── RIGHT SANKEY links (col2 → col3) ─────────────────────────────
+svg.append("g").attr("fill","none")
+  .selectAll("path").data(g.links).join("path")
+  .attr("d",d3.sankeyLinkHorizontal())
+  .attr("stroke",FILL)
+  .attr("stroke-width",d=>Math.max(0.5,d.width))
+  .attr("stroke-opacity",LOPAC);
+// ── COL 3: keyword rects ──────────────────────────────────────────
+g.nodes.filter(d=>d.type==="kw").forEach(d=>{
+  svg.append("rect")
+    .attr("x",d.x0).attr("y",d.y0).attr("width",d.x1-d.x0)
+    .attr("height",Math.max(2,d.y1-d.y0))
+    .attr("fill",FILL).attr("rx",2);
+});
+// ── LABELS ────────────────────────────────────────────────────────
+const FS="18px", FF="system-ui,sans-serif";
+// Col 1: "7,567" bold + "frases" normal
+const col1cy = MT + col1H/2;
+svg.append("text").attr("x",COL1_X0-9).attr("y",col1cy-9)
+  .attr("text-anchor","end").attr("dominant-baseline","central")
+  .style("font-size",FS).style("font-weight","700")
+  .style("font-family",FF).style("fill","#ffffff")
+  .text(TOTAL_GLOBAL.toLocaleString("es-MX"));
+svg.append("text").attr("x",COL1_X0-9).attr("y",col1cy+9)
+  .attr("text-anchor","end").attr("dominant-baseline","central")
+  .style("font-size",FS).style("font-weight","400")
+  .style("font-family",FF).style("fill","rgba(255,255,255,0.7)")
+  .text("Frases totales");
+// Col 2: "N frases" bold + label normal — both with getBBox
+const s2cy=(subNode.y0+subNode.y1)/2;
+const t2a=svg.append("text").attr("x",subNode.x0-9).attr("y",s2cy-16)
+  .attr("text-anchor","end").attr("dominant-baseline","central")
+  .style("font-size",FS).style("font-weight","700")
+  .style("font-family",FF).style("fill","#ffffff")
+  .text(TOTAL_SUBJECT.toLocaleString("es-MX")+" frases");
+try{const bb=t2a.node().getBBox(),p=4;
+  svg.insert("rect",()=>t2a.node()).attr("x",bb.x-p).attr("y",bb.y-p)
+    .attr("width",bb.width+p*2).attr("height",bb.height+p*2)
+    .attr("fill","rgba(0,0,0,0.45)").attr("rx",3);}catch(e){}
+const t2b=svg.append("text").attr("x",subNode.x0-9).attr("y",s2cy+16)
+  .attr("text-anchor","end").attr("dominant-baseline","central")
+  .style("font-size",FS).style("font-weight","400")
+  .style("font-family",FF).style("fill","rgba(255,255,255,0.7)")
+  .text(LABEL);
+try{const bb=t2b.node().getBBox(),p=4;
+  svg.insert("rect",()=>t2b.node()).attr("x",bb.x-p).attr("y",bb.y-p)
+    .attr("width",bb.width+p*2).attr("height",bb.height+p*2)
+    .attr("fill","rgba(0,0,0,0.45)").attr("rx",3);}catch(e){}
+// Col 3: keyword normal + count bold, no getBBox
+g.nodes.filter(d=>d.type==="kw").forEach(d=>{
+  const cy=(d.y0+d.y1)/2;
+  const t=svg.append("text").attr("x",d.x1+8).attr("y",cy)
+    .attr("text-anchor","start").attr("dominant-baseline","central")
+    .style("font-size",FS).style("font-family",FF).style("fill","#ffffff");
+  t.append("tspan").style("font-weight","400").text(d.kw+"  ");
+  t.append("tspan").style("font-weight","700").text(d.f.toLocaleString("es-MX"));
+});
+</script>
+</body>
+</html>

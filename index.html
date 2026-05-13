@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nash — Keyword Explorer</title>
+<title>SND Challenge - Desaparecidos</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Kameron:wght@600&family=Noto+Sans:wght@300;600&display=swap');
 /* ══ CSS VARIABLES — DARK (default) ══════════════════════ */
 :root {
   --bg:        #000000;
   --surface:   #000000;
   --surface2:  #000000;
-  --surface3:  #000000;
   --border:    rgba(255,255,255,0.08);
   --border-hi: rgba(255,255,255,0.16);
   --txt:       #c8b8e0;
@@ -21,16 +21,32 @@
   --txt-dim:   #9988bb;
   --accent:    #cc55ff;
   --accent-bg: #000000;
-  --green:     #00e5a0;
   --green-bg:  #000000;
   --err:       #ff4455;
   --p5-bg-r:0; --p5-bg-g:0; --p5-bg-b:0;
   --p5-txt-r:255; --p5-txt-g:255; --p5-txt-b:255;
 }
 
+.scroll-text strong,
+.step-text strong,
+.chap-desc strong,
+.pause-body strong,
+#welcome-p strong,
+#wp0-note strong,
+#ad-text strong,
+#ape-text strong,
+#aap-text strong,
+#ae-text strong,
+#asp-text strong,
+#as-text strong,
+#rag-answer strong {
+  font-weight: 600;
+  font-family: 'Noto Sans', sans-serif;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  background: var(--bg); font-family: 'Courier New', monospace;
+  background: var(--bg); font-family: 'Noto Sans', sans-serif;
   color: var(--txt); overflow-x: hidden;
 }
 
@@ -40,10 +56,10 @@ body {
   align-items: center; justify-content: center;
   z-index: 999; gap: 16px; transition: opacity .5s;
 }
-#loading-text { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--txt-dim); }
+#loading-text { font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #ffffff; font-family: 'Kameron', serif; font-weight: 600; }
 .spinner {
   width: 22px; height: 22px;
-  border: 2px solid var(--border); border-top-color: var(--accent);
+  border: 2px solid rgba(255,255,255,0.25); border-top-color: #ffffff;
   border-radius: 50%; animation: spin .8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -75,24 +91,24 @@ body {
 
 select {
   background: var(--surface); border: 1px solid var(--border-hi); color: #ffffff;
-  padding: 4px 9px; font-family: 'Courier New', monospace;
-  font-size: 11px; letter-spacing: 1.5px; cursor: pointer;
+  padding: 4px 9px; font-family: 'Kameron', serif; font-weight: 600;
+  font-size: 12px; letter-spacing: 1.5px; cursor: pointer;
   outline: none; text-transform: uppercase; max-width: 160px;
 }
 select option { background: var(--surface); }
-#klbl { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; transition: color .4s; white-space: nowrap; }
+#klbl { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; transition: color .4s; white-space: nowrap; font-family: 'Kameron', serif; font-weight: 600; }
 
 #view-toggle, #mode-toggle { display: flex; gap: 2px; }
 #topn-sel {
   background: var(--surface2); border: 1px solid var(--border-hi); color: #ffffff;
-  padding: 4px 9px; font-family: 'Courier New', monospace;
-  font-size: 11px; letter-spacing: 1.5px; cursor: pointer;
+  padding: 4px 9px; font-family: 'Kameron', serif; font-weight: 600;
+  font-size: 12px; letter-spacing: 1.5px; cursor: pointer;
   outline: none; text-transform: uppercase; max-width: 110px;
 }
 #view-toggle button, #mode-toggle button {
   background: var(--surface); border: 1px solid var(--border-hi); color: #ffffff;
-  padding: 4px 8px; font-family: 'Courier New', monospace;
-  font-size: 11px; letter-spacing: 1px; cursor: pointer;
+  padding: 4px 8px; font-family: 'Kameron', serif; font-weight: 600;
+  font-size: 12px; letter-spacing: 1px; cursor: pointer;
   text-transform: uppercase; outline: none;
   transition: color .2s, border-color .2s, background .2s;
   white-space: nowrap;
@@ -101,12 +117,13 @@ select option { background: var(--surface); }
 #mode-toggle button.active  { color: #ffffff; border-color: #ffffff; background: var(--green-bg); }
 
 #stats {
-  font-size: 11px; letter-spacing: 2px; color: #ffffff;
+  font-size: 12px; letter-spacing: 2px; color: #ffffff;
   text-transform: uppercase; white-space: nowrap; pointer-events: none;
+  font-family: 'Kameron', serif; font-weight: 600;
 }
 
 /* ── CHART AREA ──────────────────────────────────────── */
-#chart-area { position: relative; height: 305px; flex-shrink: 0; }
+#chart-area { position: relative; height: 500px; flex-shrink: 0; }
 #chart-area canvas { position: absolute; top: 0; left: 0; }
 
 /* ── LEYENDA ─────────────────────────────────────────── */
@@ -120,12 +137,12 @@ select option { background: var(--surface); }
 .li {
   display: inline-flex; align-items: center; gap: 6px;
   cursor: pointer; transition: opacity .35s;
-  font-family: 'Courier New', monospace;
-  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  font-family: 'Kameron', serif;
+  font-size: 17px; letter-spacing: 1.5px; text-transform: uppercase;
   padding: 4px 11px; border-radius: 20px; white-space: nowrap;
 }
 .ld { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.lt { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; }
+.lt { font-size: 17px; letter-spacing: 1.5px; text-transform: uppercase; font-family: 'Kameron', serif; font-weight: 600; }
 
 /* ── CHAPTER (two-column scrollytelling) ───────────── */
 .chapter {
@@ -141,9 +158,9 @@ select option { background: var(--surface); }
   padding: 36px 24px; border-right: 1px solid var(--border);
 }
 .chap-num   { font-size: 40px; font-weight: bold; opacity: .07; line-height: 1; color: var(--txt); margin-bottom: 6px; }
-.chap-tag   { font-size: 8px; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 10px; }
-.chap-title { font-size: 20px; font-weight: bold; line-height: 1.2; margin-bottom: 10px; }
-.chap-desc  { font-size: 11px; line-height: 1.8; color: var(--txt-mid); }
+.chap-tag   { font-size: 8px; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 10px; font-family: 'Kameron', serif; font-weight: 600; }
+.chap-title { font-size: 20px; font-weight: bold; line-height: 1.2; margin-bottom: 10px; font-family: 'Kameron', serif; }
+.chap-desc  { font-size: 11px; line-height: 1.6; color: var(--txt-mid); font-family: 'Noto Sans', sans-serif; font-weight: 300; }
 
 .step {
   min-height: 60vh; padding: 48px 52px;
@@ -153,13 +170,13 @@ select option { background: var(--surface); }
 }
 .step.step--active { opacity: 1; }
 .step-eyebrow { font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
-                color: var(--txt-dim); margin-bottom: 16px; }
-.step-text  { font-size: 13px; line-height: 1.9; color: var(--txt-mid);
-              max-width: 460px; margin-bottom: 18px; }
-.step-quote { font-size: 12px; line-height: 1.85; font-style: italic;
+                color: var(--txt-dim); margin-bottom: 16px; font-family: 'Kameron', serif; font-weight: 600; }
+.step-text  { font-size: 13px; line-height: 1.6; color: var(--txt-mid);
+              max-width: 460px; margin-bottom: 18px; font-family: 'Noto Sans', sans-serif; font-weight: 300; }
+.step-quote { font-size: 12px; line-height: 1.6; font-style: italic;
               color: var(--txt-hi); border-left: 2px solid var(--accent);
-              padding-left: 14px; margin: 0 0 14px; max-width: 420px; }
-.step-meta  { font-size: 9px; letter-spacing: 1px; color: var(--txt-lo); text-transform: uppercase; }
+              padding-left: 14px; margin: 0 0 14px; max-width: 420px; font-family: 'Noto Sans', sans-serif; font-weight: 300; }
+.step-meta  { font-size: 9px; letter-spacing: 1px; color: var(--txt-lo); text-transform: uppercase; font-family: 'Noto Sans', sans-serif; font-weight: 300; }
 
 /* ── PAUSE CHAPTER (full-screen narrative break) ────── */
 .chapter-pause {
@@ -170,13 +187,13 @@ select option { background: var(--surface); }
   background: var(--surface); transition: background .5s;
 }
 .pause-eyebrow { font-size: 8px; letter-spacing: 5px; text-transform: uppercase;
-                 color: var(--txt-dim); margin-bottom: 28px; }
+                 color: var(--txt-dim); margin-bottom: 28px; font-family: 'Kameron', serif; font-weight: 600; }
 .pause-title   { font-size: clamp(28px, 5vw, 52px); font-weight: bold;
                  line-height: 1.15; color: var(--txt-hi);
-                 margin-bottom: 32px; max-width: 700px; }
-.pause-body    { font-size: clamp(13px, 1.5vw, 16px); line-height: 2;
-                 color: var(--txt-mid); max-width: 620px; }
-.pause-body p  { margin-bottom: 1.4em; }
+                 margin-bottom: 32px; max-width: 700px; font-family: 'Kameron', serif; }
+.pause-body    { font-size: clamp(13px, 1.5vw, 16px); line-height: 1.6;
+                 color: var(--txt-mid); max-width: 620px; font-family: 'Noto Sans', sans-serif; font-weight: 300; }
+.pause-body p  { margin-bottom: 1.4em; font-family: 'Noto Sans', sans-serif; font-weight: 300; }
 .pause-rule    { width: 40px; height: 2px; background: var(--accent); margin: 40px 0; }
 
 @media (max-width: 700px) {
@@ -194,8 +211,8 @@ select option { background: var(--surface); }
   max-width: 260px; z-index: 500; opacity: 0;
   transition: opacity .15s; letter-spacing: .5px;
 }
-#tooltip .t-frase { color: var(--txt-hi); margin-bottom: 4px; font-style: italic; }
-#tooltip .t-meta  { color: var(--txt-lo); font-size: 9px; }
+#tooltip .t-frase { color: var(--txt-hi); margin-bottom: 4px; font-style: italic; font-family: 'Noto Sans', sans-serif; font-weight: 300; }
+#tooltip .t-meta  { color: var(--txt-lo); font-size: 9px; font-family: 'Noto Sans', sans-serif; font-weight: 300; }
 
 /* ── DOT MODAL (on-click, info completa) ─────────────── */
 #dot-modal-overlay {
@@ -220,20 +237,20 @@ select option { background: var(--surface); }
 #dot-modal-close:hover { color: var(--txt-hi); }
 #dot-modal-kw {
   font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
-  color: var(--accent); margin-bottom: 12px;
+  color: var(--accent); margin-bottom: 12px; font-family: 'Kameron', serif; font-weight: 600;
 }
 #dot-modal-frase {
-  font-size: 13px; line-height: 1.9; color: var(--txt-hi);
+  font-size: 13px; line-height: 1.6; color: var(--txt-hi);
   font-style: italic; margin-bottom: 18px;
-  border-left: 2px solid var(--accent); padding-left: 14px;
+  border-left: 2px solid var(--accent); padding-left: 14px; font-family: 'Noto Sans', sans-serif; font-weight: 300;
 }
 #dot-modal-meta {
   display: grid; grid-template-columns: 1fr 1fr;
   gap: 8px 20px; font-size: 9px; letter-spacing: 1px;
 }
 .dm-row { display: flex; flex-direction: column; gap: 2px; }
-.dm-label { text-transform: uppercase; color: var(--txt-dim); font-size: 8px; letter-spacing: 2px; }
-.dm-val   { color: var(--txt-mid); }
+.dm-label { text-transform: uppercase; color: var(--txt-dim); font-size: 8px; letter-spacing: 2px; font-family: 'Kameron', serif; font-weight: 600; }
+.dm-val   { color: var(--txt-mid); font-family: 'Noto Sans', sans-serif; font-weight: 300; }
 
 /* ── TAB BAR ─────────────────────────────────────────── */
 #tab-bar {
@@ -243,7 +260,7 @@ select option { background: var(--surface); }
 }
 .tab-btn {
   flex: 1; padding: 11px 0; text-align: center;
-  font-family: 'Courier New', monospace; font-size: 11px;
+  font-family: 'Kameron', serif; font-weight: 600; font-size: 11px;
   letter-spacing: 2.5px; text-transform: uppercase;
   color: #ffffff; background: none; border: none;
   cursor: pointer; transition: color .2s, border-bottom .2s;
@@ -260,14 +277,14 @@ select option { background: var(--surface); }
 #rag-input {
   flex: 1; background: var(--surface); border: 1px solid var(--border-hi);
   color: var(--txt-hi); padding: 10px 14px;
-  font-family: 'Courier New', monospace; font-size: 11px;
+  font-family: 'Noto Sans', sans-serif; font-weight: 300; font-size: 11px;
   letter-spacing: .5px; outline: none; transition: border-color .2s;
 }
 #rag-input:focus { border-color: var(--accent); }
 #rag-input::placeholder { color: var(--txt-dim); }
 #rag-btn {
   background: var(--accent-bg); border: 1px solid var(--accent); color: var(--accent);
-  padding: 10px 18px; font-family: 'Courier New', monospace;
+  padding: 10px 18px; font-family: 'Kameron', serif; font-weight: 600;
   font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
   cursor: pointer; white-space: nowrap; transition: background .2s;
 }
@@ -278,7 +295,7 @@ select option { background: var(--surface); }
 #rag-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 22px; }
 .chip {
   background: var(--surface); border: 1px solid var(--border-hi); color: var(--txt-lo);
-  padding: 4px 10px; font-family: 'Courier New', monospace;
+  padding: 4px 10px; font-family: 'Kameron', serif; font-weight: 600;
   font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
   cursor: pointer; transition: color .2s, border-color .2s;
 }
@@ -288,19 +305,19 @@ select option { background: var(--surface); }
 #rag-empty {
   margin-top: 48px; text-align: center;
   font-size: 10px; letter-spacing: 2px;
-  color: var(--txt-dim); text-transform: uppercase;
+  color: var(--txt-dim); text-transform: uppercase; font-family: 'Noto Sans', sans-serif; font-weight: 300;
 }
 #rag-spinner { display: none; margin: 48px auto; text-align: center; }
 #rag-answer-wrap { display: none; }
 #rag-answer {
-  font-size: 12px; line-height: 1.9; color: var(--txt-hi);
+  font-size: 12px; line-height: 1.6; color: var(--txt-hi);
   white-space: pre-wrap; margin-bottom: 20px;
   border-left: 2px solid var(--accent); padding-left: 16px;
-  opacity: 0.9;
+  opacity: 0.9; font-family: 'Noto Sans', sans-serif; font-weight: 300;
 }
 #sources-toggle {
   background: none; border: none; border-top: 1px solid var(--border);
-  color: var(--txt-lo); font-family: 'Courier New', monospace;
+  color: var(--txt-lo); font-family: 'Kameron', serif; font-weight: 600;
   font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
   cursor: pointer; padding: 10px 0; display: block; width: 100%;
   text-align: left; transition: color .2s;
@@ -311,8 +328,8 @@ select option { background: var(--surface); }
   border: 1px solid var(--border); padding: 10px 14px;
   margin-bottom: 8px; font-size: 10px; line-height: 1.7;
 }
-.source-frase { color: var(--txt-mid); font-style: italic; margin-bottom: 5px; }
-.source-meta  { color: var(--txt-lo); font-size: 9px; letter-spacing: .5px; }
+.source-frase { color: var(--txt-mid); font-style: italic; margin-bottom: 5px; font-family: 'Noto Sans', sans-serif; font-weight: 300; }
+.source-meta  { color: var(--txt-lo); font-size: 9px; letter-spacing: .5px; font-family: 'Kameron', serif; font-weight: 600; }
 
 /* ── MOBILE ──────────────────────────────────────────── */
 @media (max-width: 600px) {
@@ -352,40 +369,45 @@ body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px
 }
 #welcome-body {
   position: relative; z-index: 2;
-  text-align: center; max-width: 900px; padding: 40px 48px;
+  text-align: center; max-width: 1500px; padding: 40px 48px;
   background: rgba(0,0,0,0.65); border-radius: 12px;
 }
+#wp-1, #wp-2 {
+  max-width: 800px;
+  margin: 0 auto;
+}
 #welcome-h1 {
-  font-size: clamp(1.4rem, 4vw, 2.6rem); font-weight: bold;
-  line-height: 1.25; color: #ffffff; margin-bottom: 20px;
-  font-family: 'Courier New', monospace;
+  font-size: clamp(1.6rem, 4vw, 3rem); font-weight: bold;
+  line-height: 1.3; color: #ffffff; margin-bottom: 10px;
+  font-family: 'Kameron', serif;
 }
 #welcome-p {
-  font-size: clamp(12px, 1.4vw, 15px); line-height: 1.85;
-  color: #ffffff; margin-bottom: 12px;
-  font-family: 'Courier New', monospace;
+  font-size: clamp(21px, 2vw, 24px); line-height: 1.6;
+  color: #ffffff; margin-bottom: 10px;
+  font-family: 'Noto Sans', sans-serif; font-weight: 300;
 }
-.welcome-panel { display: none; opacity: 0; transition: opacity 0.6s ease; }
+.welcome-panel { display: none; opacity: 0; transition: opacity 0.6s ease; position: relative; }
 .welcome-panel.active { display: block; opacity: 1; }
+#wp0-logo { position: static; display: block; margin: 0 auto 20px; height: 30px; width: auto; opacity: 1; margin-bottom: 50px; }
+#wp-0 { padding-top: 30px; }
+#wp-1, #wp-2 { text-align: left; }
 .scroll-trigger { height: 100vh; pointer-events: none; }
 .scroll-title {
-  font-family: 'Courier New', monospace;
-  font-size: clamp(1.1rem, 2.5vw, 1.6rem); font-weight: bold;
-  color: #ffffff; line-height: 1.3; margin-bottom: 28px;
+  font-family: 'Kameron', serif;
+  font-size: clamp(1.4rem, 3vw, 2.4rem); font-weight: bold;
+  color: #ffffff; line-height: 1.3; margin-bottom: 20px; text-align: center;
 }
 .scroll-text {
-  font-family: 'Courier New', monospace;
-  font-size: clamp(13px, 1.4vw, 15px); line-height: 1.95;
+  font-family: 'Noto Sans', sans-serif; font-weight: 300;
+  font-size: clamp(15px, 1.6vw, 18px); line-height: 1.6;
   color: rgba(255,255,255,0.85); margin-bottom: 20px;
 }
 .scroll-text strong { color: #ffffff; }
 
 /* ── ANÁLISIS DESAPARECIDOS ───────────────────────── */
 #analisis-desaparecidos {
-  position: relative; width: 100%; min-height: 100vh;
+  position: relative; width: 100%; height: 200vh;
   background: #000;
-  display: flex; align-items: center; justify-content: center;
-  padding: 80px 32px; overflow: hidden;
 }
 #ad-canvas {
   position: absolute; top: 0; left: 0;
@@ -401,28 +423,32 @@ body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px
   position: relative; z-index: 2;
   text-align: center; max-width: 900px;
   background: rgba(0,0,0,0.65); border-radius: 12px; padding: 40px 48px;
-  opacity: 0; transform: translateY(28px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
+  opacity: 1;
 }
 #ad-body.visible { opacity: 1; transform: translateY(0); }
+#ad-sticky {
+  position: sticky; top: 0; height: 100vh; width: 100%;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.ad-panel { display: none; opacity: 0; transition: opacity 0.6s ease; }
+.ad-panel.active { display: block; opacity: 1; }
 #ad-label {
-  font-family: 'Courier New', monospace; font-size: 9px;
+  font-family: 'Kameron', serif; font-weight: 600; font-size: 9px;
   letter-spacing: 3px; text-transform: uppercase;
   color: rgba(255,255,255,0.5); margin-bottom: 16px;
 }
 #ad-legend { margin-bottom: 20px; }
 #ad-title {
-  font-family: 'Courier New', monospace;
-  font-size: clamp(1.1rem, 2.5vw, 1.7rem); font-weight: bold;
-  color: #ffffff; line-height: 1.3; margin-bottom: 28px;
+  font-family: 'Kameron', serif;
+  font-size: clamp(1.4rem, 3vw, 2.4rem); font-weight: bold;
+  color: #ffffff; line-height: 1.3; margin-bottom: 20px;
 }
 
 /* ── ANÁLISIS POLÍTICA EXTERIOR ───────────────────── */
 #analisis-politica-exterior {
-  position: relative; width: 100%; min-height: 100vh;
+  position: relative; width: 100%; height: 200vh;
   background: #000;
-  display: flex; align-items: center; justify-content: center;
-  padding: 80px 32px; overflow: hidden;
 }
 #ape-canvas {
   position: absolute; top: 0; left: 0;
@@ -438,28 +464,32 @@ body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px
   position: relative; z-index: 2;
   text-align: center; max-width: 900px;
   background: rgba(0,0,0,0.65); border-radius: 12px; padding: 40px 48px;
-  opacity: 0; transform: translateY(28px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
+  opacity: 1;
 }
 #ape-body.visible { opacity: 1; transform: translateY(0); }
+#ape-sticky {
+  position: sticky; top: 0; height: 100vh; width: 100%;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.ape-panel { display: none; opacity: 0; transition: opacity 0.6s ease; }
+.ape-panel.active { display: block; opacity: 1; }
 #ape-label {
-  font-family: 'Courier New', monospace; font-size: 9px;
+  font-family: 'Kameron', serif; font-weight: 600; font-size: 9px;
   letter-spacing: 3px; text-transform: uppercase;
   color: rgba(255,255,255,0.5); margin-bottom: 16px;
 }
 #ape-legend { margin-bottom: 20px; }
 #ape-title {
-  font-family: 'Courier New', monospace;
-  font-size: clamp(1.1rem, 2.5vw, 1.7rem); font-weight: bold;
-  color: #ffffff; line-height: 1.3; margin-bottom: 28px;
+  font-family: 'Kameron', serif;
+  font-size: clamp(1.4rem, 3vw, 2.4rem); font-weight: bold;
+  color: #ffffff; line-height: 1.3; margin-bottom: 20px;
 }
 
 /* ── ANÁLISIS ACTORES POLÍTICOS ───────────────────── */
 #analisis-actores-politicos {
-  position: relative; width: 100%; min-height: 100vh;
+  position: relative; width: 100%; height: 200vh;
   background: #000;
-  display: flex; align-items: center; justify-content: center;
-  padding: 80px 32px; overflow: hidden;
 }
 #aap-canvas {
   position: absolute; top: 0; left: 0;
@@ -475,28 +505,28 @@ body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px
   position: relative; z-index: 2;
   text-align: center; max-width: 900px;
   background: rgba(0,0,0,0.65); border-radius: 12px; padding: 40px 48px;
-  opacity: 0; transform: translateY(28px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
+  opacity: 1;
 }
 #aap-body.visible { opacity: 1; transform: translateY(0); }
+#aap-sticky { position: sticky; top: 0; height: 100vh; width: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.aap-panel { display: none; opacity: 0; transition: opacity 0.6s ease; }
+.aap-panel.active { display: block; opacity: 1; }
 #aap-label {
-  font-family: 'Courier New', monospace; font-size: 9px;
+  font-family: 'Kameron', serif; font-weight: 600; font-size: 9px;
   letter-spacing: 3px; text-transform: uppercase;
   color: rgba(255,255,255,0.5); margin-bottom: 16px;
 }
 #aap-legend { margin-bottom: 20px; }
 #aap-title {
-  font-family: 'Courier New', monospace;
-  font-size: clamp(1.1rem, 2.5vw, 1.7rem); font-weight: bold;
-  color: #ffffff; line-height: 1.3; margin-bottom: 28px;
+  font-family: 'Kameron', serif;
+  font-size: clamp(1.4rem, 3vw, 2.4rem); font-weight: bold;
+  color: #ffffff; line-height: 1.3; margin-bottom: 20px;
 }
 
 /* ── ANÁLISIS ECONOMÍA ───────────────────────────── */
 #analisis-economia {
-  position: relative; width: 100%; min-height: 100vh;
+  position: relative; width: 100%; height: 200vh;
   background: #000;
-  display: flex; align-items: center; justify-content: center;
-  padding: 80px 32px; overflow: hidden;
 }
 #ae-canvas {
   position: absolute; top: 0; left: 0;
@@ -512,28 +542,28 @@ body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px
   position: relative; z-index: 2;
   text-align: center; max-width: 900px;
   background: rgba(0,0,0,0.65); border-radius: 12px; padding: 40px 48px;
-  opacity: 0; transform: translateY(28px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
+  opacity: 1;
 }
 #ae-body.visible { opacity: 1; transform: translateY(0); }
+#ae-sticky { position: sticky; top: 0; height: 100vh; width: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.ae-panel { display: none; opacity: 0; transition: opacity 0.6s ease; }
+.ae-panel.active { display: block; opacity: 1; }
 #ae-label {
-  font-family: 'Courier New', monospace; font-size: 9px;
+  font-family: 'Kameron', serif; font-weight: 600; font-size: 9px;
   letter-spacing: 3px; text-transform: uppercase;
   color: rgba(255,255,255,0.5); margin-bottom: 16px;
 }
 #ae-legend { margin-bottom: 20px; }
 #ae-title {
-  font-family: 'Courier New', monospace;
-  font-size: clamp(1.1rem, 2.5vw, 1.7rem); font-weight: bold;
-  color: #ffffff; line-height: 1.3; margin-bottom: 28px;
+  font-family: 'Kameron', serif;
+  font-size: clamp(1.4rem, 3vw, 2.4rem); font-weight: bold;
+  color: #ffffff; line-height: 1.3; margin-bottom: 20px;
 }
 
 /* ── ANÁLISIS SEGURIDAD PÚBLICA ──────────────────── */
 #analisis-seguridad-publica {
-  position: relative; width: 100%; min-height: 100vh;
+  position: relative; width: 100%; height: 200vh;
   background: #000;
-  display: flex; align-items: center; justify-content: center;
-  padding: 80px 32px; overflow: hidden;
 }
 #asp-canvas {
   position: absolute; top: 0; left: 0;
@@ -549,20 +579,22 @@ body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px
   position: relative; z-index: 2;
   text-align: center; max-width: 900px;
   background: rgba(0,0,0,0.65); border-radius: 12px; padding: 40px 48px;
-  opacity: 0; transform: translateY(28px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
+  opacity: 1;
 }
 #asp-body.visible { opacity: 1; transform: translateY(0); }
+#asp-sticky { position: sticky; top: 0; height: 100vh; width: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.asp-panel { display: none; opacity: 0; transition: opacity 0.6s ease; }
+.asp-panel.active { display: block; opacity: 1; }
 #asp-label {
-  font-family: 'Courier New', monospace; font-size: 9px;
+  font-family: 'Kameron', serif; font-weight: 600; font-size: 9px;
   letter-spacing: 3px; text-transform: uppercase;
   color: rgba(255,255,255,0.5); margin-bottom: 16px;
 }
 #asp-legend { margin-bottom: 20px; }
 #asp-title {
-  font-family: 'Courier New', monospace;
-  font-size: clamp(1.1rem, 2.5vw, 1.7rem); font-weight: bold;
-  color: #ffffff; line-height: 1.3; margin-bottom: 28px;
+  font-family: 'Kameron', serif;
+  font-size: clamp(1.4rem, 3vw, 2.4rem); font-weight: bold;
+  color: #ffffff; line-height: 1.3; margin-bottom: 20px;
 }
 
 /* ── ANÁLISIS SALUD ──────────────────────────────── */
@@ -591,31 +623,101 @@ body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px
 }
 #as-body.visible { opacity: 1; transform: translateY(0); }
 #as-label {
-  font-family: 'Courier New', monospace; font-size: 9px;
+  font-family: 'Kameron', serif; font-weight: 600; font-size: 9px;
   letter-spacing: 3px; text-transform: uppercase;
   color: rgba(255,255,255,0.5); margin-bottom: 16px;
 }
 #as-legend { margin-bottom: 20px; }
 #as-title {
-  font-family: 'Courier New', monospace;
-  font-size: clamp(1.1rem, 2.5vw, 1.7rem); font-weight: bold;
-  color: #ffffff; line-height: 1.3; margin-bottom: 28px;
+  font-family: 'Kameron', serif;
+  font-size: clamp(1.4rem, 3vw, 2.4rem); font-weight: bold;
+  color: #ffffff; line-height: 1.3; margin-bottom: 20px;
+}
+#ad-text p, #ape-text p, #aap-text p, #ae-text p, #asp-text p, #as-text p {
+  font-family: 'Noto Sans', sans-serif; font-weight: 300; font-size: clamp(15px, 1.6vw, 18px);
 }
 #wp0-note {
-  font-family: 'Courier New', monospace;
-  font-size: clamp(12px, 1.4vw, 15px); line-height: 1.85;
-  color: #ffffff; margin: 28px 0 18px;
+  font-family: 'Noto Sans', sans-serif; font-weight: 300;
+  font-size: clamp(15px, 1.6vw, 18px); line-height: 1.6;
+  color: rgb(255, 255, 255, 0.65); margin-bottom: 10px;
 }
-#wp0-note strong { color: #ffffff; }
+#wp0-note strong { color: rgb(255, 255, 255, 0.65); }
 #wp0-legend {
   display: flex; flex-wrap: wrap;
-  justify-content: center; gap: 8px;
+  justify-content: center; gap: 8px; margin-bottom: 20px;
 }
 .wp0-tag {
-  font-family: 'Courier New', monospace; font-size: 15px;
+  font-family: 'Kameron', serif; font-weight: 600; font-size: 17px;
   letter-spacing: 1.5px; text-transform: uppercase;
   padding: 5px 12px; border-radius: 20px; white-space: nowrap;
 }
+
+#ad-text, #ape-text, #aap-text, #ae-text, #asp-text, #as-text {
+  text-align: left;
+}
+
+#conclusiones {
+  position: relative; width: 100%; min-height: 100vh;
+  background: #000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 80px 32px; overflow: hidden;
+}
+#con-canvas {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 0;
+}
+#con-vg {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: radial-gradient(ellipse at center,
+    rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.0) 100%);
+}
+#con-body {
+  position: relative; z-index: 2;
+  text-align: center; max-width: 900px;
+  background: rgba(0,0,0,0.65); border-radius: 12px; padding: 40px 48px;
+  opacity: 0; transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+#con-body.visible { opacity: 1; transform: translateY(0); }
+#con-title {
+  font-family: 'Kameron', serif;
+  font-size: clamp(1.4rem, 3vw, 2.4rem); font-weight: bold;
+  color: #ffffff; line-height: 1.3; margin-bottom: 20px;
+}
+#con-text { text-align: left; }
+#con-text p {
+  font-family: 'Noto Sans', sans-serif; font-weight: 300;
+  font-size: clamp(15px, 1.6vw, 18px); line-height: 1.6;
+  color: rgba(255,255,255,0.85); margin-bottom: 20px;
+}
+
+#wp0-credits {
+  font-family: 'Noto Sans', sans-serif; font-weight: 300;
+  font-size: clamp(11px, 1.2vw, 13px); line-height: 1.6;
+  color: rgb(255, 255, 255, 0.65); margin-top: 20px; margin-bottom: 20px;
+  text-transform: uppercase; letter-spacing: 3px;
+}
+
+#dot-note {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 50;
+  font-family: 'Noto Sans', sans-serif;
+  font-weight: 300;
+  font-size: clamp(10px, 1vw, 13px);
+  line-height: 1.6;
+  color: rgba(255,255,255,0.85);
+  background: rgba(0,0,0,0.65);
+  padding: 8px 14px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+#dot-note.visible { opacity: 1; }
 
 </style>
 <script>
@@ -626,7 +728,7 @@ const SUBJECT_COLORS = {
   'Economia':          '#00ab8c',
   'Seguridad_publica': '#f34648',
   'Actores_politicos': '#f4b723',
-  'Salud':             '#5f2a91',
+  'Salud':             '#b06df5',
 };
 </script>
 </head>
@@ -649,29 +751,36 @@ const SUBJECT_COLORS = {
     <div id="welcome-body">
 
       <div class="welcome-panel active" id="wp-0">
-        <h1 id="welcome-h1">Las personas desaparecidas tampoco están en las mañaneras de la presidenta</h1>
-        <p id="welcome-p">En México las personas desaparecen dos veces, la primera cuando no regresan con sus familias y la segunda cuando no las nombran.</p>
+        <img src="Logo_centro.png" id="wp0-logo" alt="CENTRO">
+        <p id="wp0-credits">Por Nallely Velázquez, Omar Galdamez y Mariana Centeno - Mayo, 2026.</p>
+        <h1 id="welcome-h1">LAS PERSONAS DESAPARECIDAS TAMPOCO ESTÁN EN LAS MAÑANERAS DE LA PRESIDENTA</h1>
+        <p id="welcome-p">En México las personas desaparecen dos veces.</p>
+        <p id="welcome-p">La primera cuando no regresan con sus familias y la segunda cuando no las nombran.</p>
         <br>
-        <p id="wp0-note">Este análisis explora <strong>7,567 frases</strong> clasificadas en 6 categorías</p>
+        <br>
+        <br>
+        <br>
+        <p id="wp0-note">Este análisis explora <strong>7,567 frases</strong> mencionadas por la presidenta Claudia Sheinbaum durante su primer año de gobierno.</p>
+        <p id="wp0-note">Cada una representada por un punto y clasificada en seis temas:</p>
         <div id="wp0-legend">
           <span class="wp0-tag" style="background:rgba(72,116,224,0.18); color:#4874e0;">● Política exterior</span>
           <span class="wp0-tag" style="background:rgba(244,183,35,0.18); color:#f4b723;">● Actores políticos</span>
           <span class="wp0-tag" style="background:rgba(0,171,140,0.18); color:#00ab8c;">● Economía</span>
           <span class="wp0-tag" style="background:rgba(248,52,72,0.18); color:#f34648;">● Seguridad pública</span>
-          <span class="wp0-tag" style="background:rgba(95,42,145,0.18); color:#9f6fe0;">● Salud</span>
+          <span class="wp0-tag" style="background:rgba(176,109,245,0.18); color:#b06df5;">● Salud</span>
           <span class="wp0-tag" style="background:rgba(255,255,255,0.12); color:#ffffff;">● Desapariciones</span>
         </div>
       </div>
 
       <div class="welcome-panel" id="wp-1">
-        <p class="scroll-text">Durante el primer año de gobierno de la presidenta Claudia Sheinbaum, <strong>37,695</strong> personas fueron reportadas como desaparecidas en el país, una cifra <strong>53%</strong> superior a la registrada en el mismo periodo de su antecesor. Durante el lapso analizado desaparecieron <strong>103 personas por día</strong>. Cada 14 minutos un hermano, un hijo o una madre se convirtieron en un cartel de búsqueda.</p>
-        <p class="scroll-text">A la par la presidenta dictó <strong>245 conferencias mañaneras</strong>, solo <strong>1%</strong> de las frases pronunciadas en estos espacios abordaron el tema de las desapariciones. En contraste, mencionó <strong>816 veces</strong> al ex presidente Andrés Manuel López Obrador y <strong>466</strong> al presidente de los Estados Unidos, Donald Trump.</p>
+        <p class="scroll-text">Durante el primer año de gobierno de la presidenta Claudia Sheinbaum, <strong>37,695</strong> personas fueron reportadas como desaparecidas en México, según datos de la Comisión Nacional de Búsqueda (CNB). Un incremento de <strong>53%</strong> respecto al mismo periodo de su antecesor. En este lapso desaparecieron <strong>103 personas diariamente</strong>. Aproximadamente cada 14 minutos una hermana, un hijo o una madre se convirtieron en un cartel de búsqueda.</p>
+        <p class="scroll-text">A la par la presidenta dictó <strong>245 conferencias mañaneras</strong>. A través de un análisis de transcripciones oficiales, se identificó que solo <strong>1 de cada 100</strong> frases pronunciadas por la mandataria en estos espacios abordó el tema de las desapariciones. En contraste, ella mencionó <strong>816 veces</strong> al ex presidente López Obrador y <strong>466</strong> a Donald Trump.</p>
       </div>
 
       <div class="welcome-panel" id="wp-2">
         <h2 class="scroll-title">Las políticas públicas no han sido exitosas</h2>
-        <p class="scroll-text">Recientemente el Comité contra la Desaparición Forzada de las Naciones Unidas concluyó algo que colectivos, investigadores y periodistas advertían ya: las desapariciones en el país son <strong>sistemáticas y generalizadas</strong>. Pese a que no hay pruebas de una política a nivel federal para cometer desapariciones forzadas, sí las hay sobre la participación directa de funcionarios públicos, ya sea para su autorización, apoyo o aquiescencia.</p>
-        <p class="scroll-text">Se estima que se han encontrado más de <strong>4,500 fosas clandestinas</strong>, con más de <strong>6,200 cadáveres</strong> y <strong>4,600 restos humanos</strong>, además de unos <strong>72,000 restos humanos no identificados</strong>.</p>
+        <p class="scroll-text">El 2 de abril de 2026, el Comité contra la Desaparición Forzada de las Naciones Unidas concluyó que las desapariciones en México son <strong>sistemáticas y generalizadas</strong>. Pese a que no hay pruebas de una política federal para cometer desapariciones forzadas, sí las hay sobre la participación directa de funcionarios públicos, ya sea para su autorización, apoyo o aquiescencia.</p>
+        <p class="scroll-text">El organismo estimó que se han encontrado más de <strong>4,500 fosas clandestinas</strong>, con más de <strong>6,200 cadáveres</strong> y <strong>4,600 restos humanos</strong>. Otros <strong>72,000 restos</strong> permanecen sin identificar.</p>
         <p class="scroll-text">Para quienes buscan a sus seres queridos, el Estado ha fallado en entender y frenar las verdaderas causas de las desapariciones.</p>
       </div>
 
@@ -709,26 +818,71 @@ const SUBJECT_COLORS = {
 
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
+
 })();
 </script>
 
 <!-- ── ANÁLISIS DESAPARECIDOS ─────────────────────── -->
 <section id="analisis-desaparecidos">
-  <canvas id="ad-canvas"></canvas>
-  <div id="ad-vg"></div>
-  <div id="ad-body">
-    <div id="ad-legend">
-      <span class="wp0-tag" style="background:rgba(255,255,255,0.12); color:#ffffff;">● Desapariciones</span>
-    </div>
-    <h2 id="ad-title">La magnitud de la crisis no refleja su espacio en el discurso</h2>
-    <div id="ad-text">
-      <p class="scroll-text">Pese a la herida abierta, las personas desaparecidas en México siguen sin encontrar eco en el discurso diario de la presidenta. Entre el 2 de octubre de 2024 y el 2 de octubre de 2025 sus conferencias matutinas produjeron apenas <strong>73 frases</strong> vinculadas al tema: <strong>33</strong> veces mencionó a los desaparecidos, <strong>30</strong> a las personas desaparecidas, <strong>11</strong> a la Comisión Nacional de Búsqueda, <strong>3</strong> a los grupos de madres buscadoras y <strong>2</strong> a las fosas comunes.</p>
-      <p class="scroll-text">La mayoría de estos fragmentos se ubican en <strong>marzo de 2025</strong>, cuando el colectivo Guerreros Buscadores de Jalisco expuso públicamente el Rancho Izaguirre en Teuchitlán, un centro de reclutamiento forzado, entrenamiento táctico y presunto exterminio operado por el CJNG.</p>
-      <p class="scroll-text">El problema de no nombrar a las personas desaparecidas es que el silencio frena la construcción de políticas públicas más eficaces, diluye la responsabilidad del Estado y, sobre todo, <strong>normaliza la desaparición como una constante sistémica</strong>.</p>
-      <p class="scroll-text">Mientras miles de familias mantienen sus vidas en pausa esperando una respuesta, <strong>la emergencia sigue sin nombrarse con la frecuencia que la situación exige.</strong></p>
+  <div id="ad-sticky">
+    <canvas id="ad-canvas"></canvas>
+    <div id="ad-vg"></div>
+    <div id="ad-body">
+
+      <div class="ad-panel active" id="adp-0">
+        <div id="ad-legend">
+          <span class="wp0-tag" style="background:rgba(255,255,255,0.12); color:#ffffff;">● Desapariciones</span>
+        </div>
+        <h2 id="ad-title">La magnitud de la crisis no refleja su espacio en el discurso</h2>
+        <div id="ad-text">
+          <p class="scroll-text">Durante su primer año de gobierno, entre el 2 de octubre de 2024 y el 2 de octubre de 2025, la presidenta de México apenas elaboró <strong>73 frases</strong> con <strong>79 palabras</strong> vinculadas al tema.</p>
+        </div>
+        <iframe src="Sankeys/sankey_desapariciones.html"
+          allowtransparency="true"
+          scrolling="no"
+          style="width:100%; height:360px; border:none; border-radius:8px; 
+          margin-top:20px; display:block; background:transparent;"
+          loading="lazy" title="Sankey Desapariciones">
+        </iframe>
+      </div>
+
+      <div class="ad-panel" id="adp-1">
+        <div id="ad-legend">
+          <span class="wp0-tag" style="background:rgba(255,255,255,0.12); color:#ffffff;">● Desapariciones</span>
+        </div>
+        <div id="ad-text">
+          <p class="scroll-text">La mayoría de estos fragmentos se ubican en <strong>marzo de 2025</strong>, cuando el colectivo Guerreros Buscadores de Jalisco expuso públicamente el Rancho Izaguirre en Teuchitlán, un centro de reclutamiento forzado, entrenamiento táctico y presunto exterminio operado por el CJNG.</p>
+          <p class="scroll-text">El silencio en el discurso oficial sobre las personas desaparecidas tiene consecuencias documentadas: dificulta la rendición de cuentas y la construcción de políticas públicas eficaces. Mientras tanto, miles de familias mantienen sus vidas en pausa esperando una respuesta, y <strong>la crisis sigue sin recibir la atención discursiva que su magnitud exige.</strong></p>
+        </div>
+      </div>
+
     </div>
   </div>
+  <div class="scroll-trigger"></div>
+  <div class="scroll-trigger"></div>
 </section>
+<script>
+(function () {
+  const panels = [
+    document.getElementById('adp-0'),
+    document.getElementById('adp-1'),
+  ];
+  function showPanel(i) {
+    panels.forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
+    panels[i].style.display = 'block';
+    requestAnimationFrame(() => panels[i].classList.add('active'));
+  }
+  function onScroll() {
+    const rect = document.getElementById('analisis-desaparecidos').getBoundingClientRect();
+    const scrolled = -rect.top;
+    const vh = window.innerHeight;
+    if (scrolled < vh * 0.6) showPanel(0);
+    else                     showPanel(1);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
 <script>
 (function () {
   const body = document.getElementById('ad-body');
@@ -745,9 +899,8 @@ const SUBJECT_COLORS = {
   let width, height, nodes, running = false;
 
   function resize() {
-    const section = document.getElementById('analisis-desaparecidos');
-    width  = canvas.width  = section.clientWidth  || window.innerWidth;
-    height = canvas.height = section.clientHeight || window.innerHeight;
+    width  = canvas.width  = window.innerWidth;
+    height = canvas.height = window.innerHeight;
     console.log('ad-canvas size:', width, height);
   }
   window.addEventListener('resize', resize);
@@ -820,20 +973,65 @@ const SUBJECT_COLORS = {
 
 <!-- ── ANÁLISIS POLÍTICA EXTERIOR ───────────────── -->
 <section id="analisis-politica-exterior">
-  <canvas id="ape-canvas"></canvas>
-  <div id="ape-vg"></div>
-  <div id="ape-body">
-    <div id="ape-legend">
-      <span class="wp0-tag" style="background:rgba(72,116,224,0.18); color:#4874e0;">● Política exterior</span>
-    </div>
-    <h2 id="ape-title">La relación con EE. UU. fue el foco de las mañaneras</h2>
-    <div id="ape-text">
-      <p class="scroll-text">En el periodo analizado la presidenta habló de política exterior a través de <strong>3,505 frases</strong>. Mencionó <strong>2,516</strong> veces a Estados Unidos, <strong>466</strong> a su presidente Donald Trump, <strong>399</strong> a los aranceles, <strong>294</strong> a la soberanía y <strong>177</strong> a los migrantes.</p>
-      <p class="scroll-text">México y Estados Unidos tienen una de las relaciones comerciales más interdependientes del mundo. El T-MEC regula 80% de las exportaciones mexicanas, así que cualquier amenaza arancelaria de Trump tiene consecuencias económicas inmediatas y reales para el país. También, la presión migratoria que ejerce el presidente vecino ha marcado la narrativa diaria de la presidenta Sheinbaum, las mañaneras se han convertido en una forma de control de daños y señalización hacia mercados, inversionistas y ciudadanos.</p>
-      <p class="scroll-text">Estas menciones no sólo son frecuentes, sino que desplazan a otros temas. La pregunta más potente no es por qué habla de Trump, sino <strong>qué deja de nombrarse mientras lo hace.</strong></p>
+  <div id="ape-sticky">
+    <canvas id="ape-canvas"></canvas>
+    <div id="ape-vg"></div>
+    <div id="ape-body">
+
+      <div class="ape-panel active" id="apep-0">
+        <div id="ape-legend">
+          <span class="wp0-tag" style="background:rgba(72,116,224,0.18); color:#4874e0;">● Política exterior</span>
+        </div>
+        <h2 id="ape-title">La relación con EE. UU. domina la agenda</h2>
+        <div id="ape-text">
+          <p class="scroll-text">En el periodo analizado, Sheinbaum dedicó <strong>3,505 frases</strong> de sus mañaneras a política exterior a través de <strong>3,852</strong> palabras relacionadas.</p>
+        </div>
+         <iframe src="Sankeys/sankey_politica_exterior.html"
+          allowtransparency="true"
+          scrolling="no"
+          style="width:100%; height:360px; border:none; border-radius:8px; 
+          margin-top:20px; display:block; background:transparent;"
+          loading="lazy" title="Sankey Desapariciones">
+        </iframe>
+      </div>
+
+      <div class="ape-panel" id="apep-1">
+        <div id="ape-legend">
+          <span class="wp0-tag" style="background:rgba(72,116,224,0.18); color:#4874e0;">● Política exterior</span>
+        </div>
+        <div id="ape-text">
+          <p class="scroll-text">Las políticas arancelaria y migratoria de Washington han sido frentes de tensión bilateral. Las deportaciones masivas y las amenazas arancelarias han obligado a Sheinbaum a responder casi en tiempo real desde las mañaneras, espacios que han funcionado también como señales hacia inversionistas y socios comerciales sobre la postura del gobierno mexicano.</p>
+          <p class="scroll-text">La pregunta no es por qué habla de Trump, sino <strong>qué deja de nombrar mientras lo hace.</strong></p>
+        </div>
+      </div>
+
     </div>
   </div>
+  <div class="scroll-trigger"></div>
+  <div class="scroll-trigger"></div>
 </section>
+<script>
+(function () {
+  const panels = [
+    document.getElementById('apep-0'),
+    document.getElementById('apep-1'),
+  ];
+  function showPanel(i) {
+    panels.forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
+    panels[i].style.display = 'block';
+    requestAnimationFrame(() => panels[i].classList.add('active'));
+  }
+  function onScroll() {
+    const rect = document.getElementById('analisis-politica-exterior').getBoundingClientRect();
+    const scrolled = -rect.top;
+    const vh = window.innerHeight;
+    if (scrolled < vh * 0.6) showPanel(0);
+    else                     showPanel(1);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
 <script>
 (function () {
   const body = document.getElementById('ape-body');
@@ -850,9 +1048,8 @@ const SUBJECT_COLORS = {
   let width, height, nodes, running = false;
 
   function resize() {
-    const section = document.getElementById('analisis-politica-exterior');
-    width  = canvas.width  = section.clientWidth  || window.innerWidth;
-    height = canvas.height = section.clientHeight || window.innerHeight;
+    width  = canvas.width  = window.innerWidth;
+    height = canvas.height = window.innerHeight;
   }
   window.addEventListener('resize', resize);
 
@@ -921,20 +1118,65 @@ const SUBJECT_COLORS = {
 
 <!-- ── ANÁLISIS ACTORES POLÍTICOS ───────────────── -->
 <section id="analisis-actores-politicos">
-  <canvas id="aap-canvas"></canvas>
-  <div id="aap-vg"></div>
-  <div id="aap-body">
-    <div id="aap-legend">
-      <span class="wp0-tag" style="background:rgba(244,183,35,0.18); color:#f4b723;">● Actores políticos</span>
-    </div>
-    <h2 id="aap-title">El ex presidente AMLO una figura constante</h2>
-    <div id="aap-text">
-      <p class="scroll-text">La conferencia matutina históricamente ha funcionado como espacio para gestionar la narrativa diaria. A través de este espacio la presidenta ha reforzado su vínculo con el movimiento que AMLO construyó durante décadas. En su primer año de gobierno fueron mencionadas <strong>1,366 frases</strong> relacionadas con actores políticos del país, entre ellas se habló <strong>816</strong> veces del ex presidente AMLO, <strong>151</strong> sobre MORENA, <strong>149</strong> de la cuarta transformación, <strong>118</strong> de la oposición, <strong>95</strong> del PAN y <strong>86</strong> del PRI.</p>
-      <p class="scroll-text">Este periodo también coincide con momentos de alta presión política en México, debates sobre el Poder Judicial, reformas constitucionales, tensiones con organismos autónomos, funcionarios públicos vinculados con el crimen organizado, etc. La oposición no es solo un recurso retórico sino un actor que está litigando en tribunales, en el Congreso y en medios.</p>
-      <p class="scroll-text">Refutar lo que dice la oposición o reivindicar el legado de AMLO es parte de la estrategia de comunicación cotidiana.</p>
+  <div id="aap-sticky">
+    <canvas id="aap-canvas"></canvas>
+    <div id="aap-vg"></div>
+    <div id="aap-body">
+
+      <div class="aap-panel active" id="aacp-0">
+        <div id="aap-legend">
+          <span class="wp0-tag" style="background:rgba(244,183,35,0.18); color:#f4b723;">● Actores políticos</span>
+        </div>
+        <h2 id="aap-title">AMLO, una figura constante</h2>
+        <div id="aap-text">
+          <p class="scroll-text">La conferencia matutina ha funcionado como espacio para gestionar la narrativa diaria y operado como tribuna de respuesta directa. A través de ellas la presidenta ha reforzado su vínculo con el movimiento que AMLO construyó durante décadas.</p>
+          <p class="scroll-text">La reivindicación del legado de López Obrador y la réplica a la oposición han sido elementos constantes de la estrategia de comunicación de la mandataria.</p>  
+        </div>
+      </div>
+
+      <div class="aap-panel" id="aacp-1">
+        <div id="aap-legend">
+          <span class="wp0-tag" style="background:rgba(244,183,35,0.18); color:#f4b723;">● Actores políticos</span>
+        </div>
+        <div id="aap-text">
+          <p class="scroll-text">En ese contexto, la presidenta produjo <strong>1,366 frases</strong> vinculadas con la política nacional, que concentraron <strong>1,415 menciones de palabras</strong> clave seleccionadas.</p>
+        </div>
+        <iframe src="Sankeys/sankey_actores_politicos.html"
+          allowtransparency="true"
+          scrolling="no"
+          style="width:100%; height:360px; border:none; border-radius:8px; 
+          margin-top:20px; display:block; background:transparent;"
+          loading="lazy" title="Sankey Desapariciones">
+        </iframe>
+      </div>
+
     </div>
   </div>
+  <div class="scroll-trigger"></div>
+  <div class="scroll-trigger"></div>
 </section>
+<script>
+(function () {
+  const panels = [
+    document.getElementById('aacp-0'),
+    document.getElementById('aacp-1'),
+  ];
+  function showPanel(i) {
+    panels.forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
+    panels[i].style.display = 'block';
+    requestAnimationFrame(() => panels[i].classList.add('active'));
+  }
+  function onScroll() {
+    const rect = document.getElementById('analisis-actores-politicos').getBoundingClientRect();
+    const scrolled = -rect.top;
+    const vh = window.innerHeight;
+    if (scrolled < vh * 0.6) showPanel(0);
+    else                     showPanel(1);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
 <script>
 (function () {
   const body = document.getElementById('aap-body');
@@ -951,9 +1193,8 @@ const SUBJECT_COLORS = {
   let width, height, nodes, running = false;
 
   function resize() {
-    const section = document.getElementById('analisis-actores-politicos');
-    width  = canvas.width  = section.clientWidth  || window.innerWidth;
-    height = canvas.height = section.clientHeight || window.innerHeight;
+    width  = canvas.width  = window.innerWidth;
+    height = canvas.height = window.innerHeight;
   }
   window.addEventListener('resize', resize);
 
@@ -1020,124 +1261,67 @@ const SUBJECT_COLORS = {
 })();
 </script>
 
-<!-- ── ANÁLISIS ECONOMÍA ───────────────────────── -->
-<section id="analisis-economia">
-  <canvas id="ae-canvas"></canvas>
-  <div id="ae-vg"></div>
-  <div id="ae-body">
-    <div id="ae-legend">
-      <span class="wp0-tag" style="background:rgba(0,171,140,0.18); color:#00ab8c;">● Economía</span>
-    </div>
-    <h2 id="ae-title">Entre las inversiones y la corrupción</h2>
-    <div id="ae-text">
-      <p class="scroll-text">Con <strong>1,270 frases</strong>, la palabra más pronunciada del bloque económico fue inversiones (<strong>752</strong> veces). Los datos revelan una apuesta por posicionar al país como imán de capital privado y muestra de estabilidad ante los mercados.</p>
-      <p class="scroll-text">El segundo término más frecuente fue corrupción, con <strong>328</strong> menciones. Su uso no fue como autocrítica sino como herramienta de contraste. La corrupción que se nombra en las mañaneras es casi siempre la del pasado, la de los gobiernos anteriores, la que la cuarta transformación vino a erradicar. Es un recurso que permite hablar de economía sin rendir cuentas sobre el presente.</p>
-      <p class="scroll-text">Inflación y salario mínimo aparecen con una frecuencia similar, <strong>100</strong> y <strong>103</strong> menciones respectivamente. Ambos temas representan preocupaciones cotidianas de la población. La brecha entre lo que más preocupa a los hogares y lo que más anuncia el gobierno es destacable.</p>
-      <p class="scroll-text">Las menciones sobre huachicol (<strong>35</strong>) sugieren que el problema o se resolvió, o dejó de ser útil narrativamente.</p>
+<!-- ── ANÁLISIS SEGURIDAD PÚBLICA ─────────────── -->
+<section id="analisis-seguridad-publica">
+  <div id="asp-sticky">
+    <canvas id="asp-canvas"></canvas>
+    <div id="asp-vg"></div>
+    <div id="asp-body">
+
+      <div class="asp-panel active" id="aspp-0">
+        <div id="asp-legend">
+          <span class="wp0-tag" style="background:rgba(243,70,72,0.18); color:#f34648;">● Seguridad pública</span>
+        </div>
+        <h2 id="asp-title">Habla de consecuencias, evita las causas</h2>
+        <div id="asp-text">
+          <p class="scroll-text">En su primer año gobernando, Claudia Sheinbaum habló de los efectos de la violencia a través de <strong>761 frases</strong> con <strong>777 palabras</strong> seleccionadas, en ellas evitó nombrar a los responsables.</p>
+        </div>
+        <iframe src="Sankeys/sankey_seguridad_publica.html"
+          allowtransparency="true"
+          scrolling="no"
+          style="width:100%; height:360px; border:none; border-radius:8px; 
+          margin-top:20px; display:block; background:transparent;"
+          loading="lazy" title="Sankey Desapariciones">
+        </iframe>
+      </div>
+
+      <div class="asp-panel" id="aspp-1">
+        <div id="asp-legend">
+          <span class="wp0-tag" style="background:rgba(243,70,72,0.18); color:#f34648;">● Seguridad pública</span>
+        </div>
+        <div id="asp-text">
+          <p class="scroll-text">El dato más revelador de este tema no está en lo que más menciona la presidenta, sino en la proporción entre los extremos. Que el crimen organizado aparezca una 1 vez cada 5 semanas en su discurso es significativo, es decir, <strong>puede hablar de seguridad pública durante un año entero sin nombrar a los actores que desaparecen personas</strong>, controlan territorios, reclutan jóvenes y compiten con el Estado por el monopolio de la violencia.</p>
+          <p class="scroll-text">Los homicidios se lamentan, la violencia se reconoce, pero las estructuras que la producen permanecen sin nombre en el discurso oficial.</p>
+        </div>
+      </div>
+
     </div>
   </div>
+  <div class="scroll-trigger"></div>
+  <div class="scroll-trigger"></div>
 </section>
 <script>
 (function () {
-  const body = document.getElementById('ae-body');
-  const io = new IntersectionObserver(entries => {
-    if (entries[0].isIntersecting) {
-      body.classList.add('visible');
-      io.unobserve(body);
-    }
-  }, { threshold: 0.15 });
-  io.observe(body);
-
-  const canvas = document.getElementById('ae-canvas');
-  const ctx    = canvas.getContext('2d');
-  let width, height, nodes, running = false;
-
-  function resize() {
-    const section = document.getElementById('analisis-economia');
-    width  = canvas.width  = section.clientWidth  || window.innerWidth;
-    height = canvas.height = section.clientHeight || window.innerHeight;
+  const panels = [
+    document.getElementById('aspp-0'),
+    document.getElementById('aspp-1'),
+  ];
+  function showPanel(i) {
+    panels.forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
+    panels[i].style.display = 'block';
+    requestAnimationFrame(() => panels[i].classList.add('active'));
   }
-  window.addEventListener('resize', resize);
-
-  (window._appData || fetch(WORKER_URL + '/data').then(r => r.json()))
-    .then(data => {
-      const dots = data.dots || [];
-
-      resize();
-      if (!width || !height) {
-        width  = canvas.width  = window.innerWidth;
-        height = canvas.height = window.innerHeight;
-      }
-
-      nodes = dots.map(d => {
-        const isHighlight = d[5] === 'Economia';
-        return {
-          x:     20 + Math.random() * (width  - 40),
-          y:     20 + Math.random() * (height - 40),
-          vx:    (Math.random() - 0.5) * (isHighlight ? 0.6 : 0.3),
-          vy:    (Math.random() - 0.5) * (isHighlight ? 0.6 : 0.3),
-          color: SUBJECT_COLORS[d[5]] || '#aaaaaa',
-          alpha: isHighlight ? 0.9 : 0.15,
-          r:     isHighlight ? 3.2 : 2.5,
-        };
-      });
-
-      function tick() {
-        if (!running) return;
-        nodes.forEach(d => {
-          d.x += d.vx; d.y += d.vy;
-          if (d.x < 4 || d.x > width  - 4) d.vx *= -1;
-          if (d.y < 4 || d.y > height - 4) d.vy *= -1;
-          d.vx += (Math.random() - 0.5) * 0.02;
-          d.vy += (Math.random() - 0.5) * 0.02;
-          const speed = Math.sqrt(d.vx * d.vx + d.vy * d.vy);
-          const maxSpeed = d.alpha > 0.5 ? 0.6 : 0.3;
-          if (speed > maxSpeed) { d.vx *= maxSpeed / speed; d.vy *= maxSpeed / speed; }
-        });
-        ctx.clearRect(0, 0, width, height);
-        nodes.forEach(d => {
-          ctx.beginPath();
-          ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
-          ctx.fillStyle   = d.color;
-          ctx.globalAlpha = d.alpha;
-          ctx.fill();
-        });
-        ctx.globalAlpha = 1;
-        requestAnimationFrame(tick);
-      }
-
-      const section = document.getElementById('analisis-economia');
-      new IntersectionObserver(entries => {
-        if (entries[0].isIntersecting) { running = true;  requestAnimationFrame(tick); }
-        else                           { running = false; }
-      }, { threshold: 0.05 }).observe(section);
-
-      const rect = section.getBoundingClientRect();
-      if (rect.top < window.innerHeight && rect.bottom > 0) {
-        running = true;
-        requestAnimationFrame(tick);
-      }
-    })
-    .catch(() => { canvas.style.display = 'none'; });
+  function onScroll() {
+    const rect = document.getElementById('analisis-seguridad-publica').getBoundingClientRect();
+    const scrolled = -rect.top;
+    const vh = window.innerHeight;
+    if (scrolled < vh * 0.6) showPanel(0);
+    else                     showPanel(1);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
 })();
 </script>
-
-<!-- ── ANÁLISIS SEGURIDAD PÚBLICA ─────────────── -->
-<section id="analisis-seguridad-publica">
-  <canvas id="asp-canvas"></canvas>
-  <div id="asp-vg"></div>
-  <div id="asp-body">
-    <div id="asp-legend">
-      <span class="wp0-tag" style="background:rgba(243,70,72,0.18); color:#f34648;">● Seguridad pública</span>
-    </div>
-    <h2 id="asp-title">Habla de síntomas, evita las causas</h2>
-    <div id="asp-text">
-      <p class="scroll-text">El dato más revelador del bloque de seguridad pública no está en lo que más se menciona, sino en la proporción entre los extremos. Violencia (<strong>257</strong>), fentanilo (<strong>255</strong>) y homicidios (<strong>235</strong>) concentran casi la totalidad del discurso. Narcotráfico (<strong>19</strong>) y crimen organizado (<strong>11</strong>) son prácticamente inexistentes. En <strong>761 frases</strong> la presidenta habló de las consecuencias pero evitó nombrar a los responsables.</p>
-      <p class="scroll-text">Que el crimen organizado aparezca una vez cada cinco semanas en el discurso de la presidenta es significativo, es decir, puede hablar de seguridad pública durante un año entero sin nombrar a los actores que controlan territorios, desaparecen personas, reclutan jóvenes y compiten con el Estado por el monopolio de la violencia.</p>
-      <p class="scroll-text">Los homicidios se lamentan, la violencia se reconoce, pero las estructuras que la producen permanecen sin nombre en el discurso oficial.</p>
-    </div>
-  </div>
-</section>
 <script>
 (function () {
   const body = document.getElementById('asp-body');
@@ -1154,9 +1338,8 @@ const SUBJECT_COLORS = {
   let width, height, nodes, running = false;
 
   function resize() {
-    const section = document.getElementById('analisis-seguridad-publica');
-    width  = canvas.width  = section.clientWidth  || window.innerWidth;
-    height = canvas.height = section.clientHeight || window.innerHeight;
+    width  = canvas.width  = window.innerWidth;
+    height = canvas.height = window.innerHeight;
   }
   window.addEventListener('resize', resize);
 
@@ -1223,20 +1406,144 @@ const SUBJECT_COLORS = {
 })();
 </script>
 
+<!-- ── ANÁLISIS ECONOMÍA ───────────────────────── -->
+<section id="analisis-economia">
+  <div id="ae-sticky">
+    <canvas id="ae-canvas"></canvas>
+    <div id="ae-vg"></div>
+    <div id="ae-body">
+
+      <div class="ae-panel active" id="aep-0">
+        <div id="ae-legend">
+          <span class="wp0-tag" style="background:rgba(0,171,140,0.18); color:#00ab8c;">● Economía</span>
+        </div>
+        <h2 id="ae-title">Entre inversiones y corrupción</h2>
+        <div id="ae-text">
+          <p class="scroll-text">Con <strong>1,270 frases</strong> y <strong>1,318</strong> palabras relacionas, la presidenta apostó por posicionar al país como imán de capital privado y muestra de estabilidad económica ante los mercados.</p>
+        </div>
+        <iframe src="Sankeys/sankey_economia.html"
+          allowtransparency="true"
+          scrolling="no"
+          style="width:100%; height:360px; border:none; border-radius:8px;
+          margin-top:20px; display:block; background:transparent;"
+          loading="lazy" title="Sankey Desapariciones">
+        </iframe>
+      </div>
+
+    </div>
+  </div>
+  <div class="scroll-trigger"></div>
+  <div class="scroll-trigger"></div>
+</section>
+<script>
+(function () {
+  const panel = document.getElementById('aep-0');
+  if (panel) { panel.style.display = 'block'; panel.classList.add('active'); }
+})();
+</script>
+<script>
+(function () {
+  const body = document.getElementById('ae-body');
+  const io = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) {
+      body.classList.add('visible');
+      io.unobserve(body);
+    }
+  }, { threshold: 0.15 });
+  io.observe(body);
+
+  const canvas = document.getElementById('ae-canvas');
+  const ctx    = canvas.getContext('2d');
+  let width, height, nodes, running = false;
+
+  function resize() {
+    width  = canvas.width  = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+
+  (window._appData || fetch(WORKER_URL + '/data').then(r => r.json()))
+    .then(data => {
+      const dots = data.dots || [];
+
+      resize();
+      if (!width || !height) {
+        width  = canvas.width  = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+
+      nodes = dots.map(d => {
+        const isHighlight = d[5] === 'Economia';
+        return {
+          x:     20 + Math.random() * (width  - 40),
+          y:     20 + Math.random() * (height - 40),
+          vx:    (Math.random() - 0.5) * (isHighlight ? 0.6 : 0.3),
+          vy:    (Math.random() - 0.5) * (isHighlight ? 0.6 : 0.3),
+          color: SUBJECT_COLORS[d[5]] || '#aaaaaa',
+          alpha: isHighlight ? 0.9 : 0.15,
+          r:     isHighlight ? 3.2 : 2.5,
+        };
+      });
+
+      function tick() {
+        if (!running) return;
+        nodes.forEach(d => {
+          d.x += d.vx; d.y += d.vy;
+          if (d.x < 4 || d.x > width  - 4) d.vx *= -1;
+          if (d.y < 4 || d.y > height - 4) d.vy *= -1;
+          d.vx += (Math.random() - 0.5) * 0.02;
+          d.vy += (Math.random() - 0.5) * 0.02;
+          const speed = Math.sqrt(d.vx * d.vx + d.vy * d.vy);
+          const maxSpeed = d.alpha > 0.5 ? 0.6 : 0.3;
+          if (speed > maxSpeed) { d.vx *= maxSpeed / speed; d.vy *= maxSpeed / speed; }
+        });
+        ctx.clearRect(0, 0, width, height);
+        nodes.forEach(d => {
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+          ctx.fillStyle   = d.color;
+          ctx.globalAlpha = d.alpha;
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(tick);
+      }
+
+      const section = document.getElementById('analisis-economia');
+      new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting) { running = true;  requestAnimationFrame(tick); }
+        else                           { running = false; }
+      }, { threshold: 0.05 }).observe(section);
+
+      const rect = section.getBoundingClientRect();
+      if (rect.top < window.innerHeight && rect.bottom > 0) {
+        running = true;
+        requestAnimationFrame(tick);
+      }
+    })
+    .catch(() => { canvas.style.display = 'none'; });
+})();
+</script>
+
 <!-- ── ANÁLISIS SALUD ─────────────────────────── -->
 <section id="analisis-salud">
   <canvas id="as-canvas"></canvas>
   <div id="as-vg"></div>
   <div id="as-body">
     <div id="as-legend">
-      <span class="wp0-tag" style="background:rgba(95,42,145,0.18); color:#9f6fe0;">● Salud</span>
+      <span class="wp0-tag" style="background:rgba(176,109,245,0.18); color:#b06df5;">● Salud</span>
     </div>
     <h2 id="as-title">Un gran protagonista, los medicamentos</h2>
     <div id="as-text">
-      <p class="scroll-text">En <strong>592 frases</strong> la presidenta mencionó <strong>434</strong> veces a los medicamentos. El dato no es casual, es respuesta a uno de los mayores escándalos heredados del sexenio anterior, cuando el desabasto de quimioterapias infantiles y medicamentos básicos generó protestas que dañaron la imagen del movimiento.</p>
-      <p class="scroll-text">Con <strong>164</strong> menciones, el IMSS Bienestar es el segundo tema dominante y la gran apuesta de infraestructura sanitaria del gobierno actual, la absorción de los servicios de salud para población sin seguridad social. Las veces que se habló de vacunas (<strong>34</strong>) sugieren que el tema dejó de ser políticamente urgente.</p>
-      <p class="scroll-text">Insumos médicos (<strong>13</strong>) y personal de salud (<strong>12</strong>) son prácticamente invisibles en el discurso mañanero presidencial. Se eluden dos factores que determinan la calidad real de la atención, las personas que trabajan en el sistema y los recursos con los que lo hacen.</p>
+      <p class="scroll-text">Con <strong>592 frases</strong> y <strong>657 palabras</strong> relacionadas, la presidenta Sheinbaum buscó dar respuesta al desabasto de medicamentos heredado del sexenio anterior.</p>
     </div>
+      <iframe src="Sankeys/sankey_salud.html"
+          allowtransparency="true"
+          scrolling="no"
+          style="width:100%; height:360px; border:none; border-radius:8px; 
+          margin-top:20px; display:block; background:transparent;"
+          loading="lazy" title="Sankey Desapariciones">
+      </iframe>
   </div>
 </section>
 <script>
@@ -1255,9 +1562,8 @@ const SUBJECT_COLORS = {
   let width, height, nodes, running = false;
 
   function resize() {
-    const section = document.getElementById('analisis-salud');
-    width  = canvas.width  = section.clientWidth  || window.innerWidth;
-    height = canvas.height = section.clientHeight || window.innerHeight;
+    width  = canvas.width  = window.innerWidth;
+    height = canvas.height = window.innerHeight;
   }
   window.addEventListener('resize', resize);
 
@@ -1324,6 +1630,93 @@ const SUBJECT_COLORS = {
 })();
 </script>
 
+<!-- ── CONCLUSIONES ──────────────────────────────── -->
+<section id="conclusiones">
+  <canvas id="con-canvas"></canvas>
+  <div id="con-vg"></div>
+  <div id="con-body">
+    <h2 id="con-title">La segunda desaparición</h2>
+    <div id="con-text">
+      <p class="scroll-text">Durante el primer año de gobierno de la presidenta Sheinbaum, <strong>las desapariciones acumularon 73 frases de 7,567 analizadas en 245 conferencias mañaneras, menos de 1%</strong>. La relación con Estados Unidos generó 3,852 menciones y el ex presidente López Obrador, 816.</p>
+      <p class="scroll-text">Seis meses después del periodo analizado, en abril de 2026, el Comité contra la Desaparición Forzada de Naciones Unidas determinó que la crisis en el país es sistemática y generalizada. <strong>Los datos recabados no permiten establecer las razones del silencio, pero sí documentar una brecha</strong>: 37,695 personas reportadas como desaparecidas en ese año, frente a 79 menciones de la presidenta en su principal espacio de comunicación.</p>
+      <p class="scroll-text">Para los colectivos de búsqueda y las familias con casos abiertos, el silencio del discurso oficial tiene un nombre concreto: <strong>la segunda desaparición</strong>.</p>
+    </div>
+  </div>
+</section>
+<script>
+(function () {
+  const body = document.getElementById('con-body');
+  const io = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) {
+      body.classList.add('visible');
+      io.unobserve(body);
+    }
+  }, { threshold: 0.15 });
+  io.observe(body);
+
+  const canvas = document.getElementById('con-canvas');
+  const ctx    = canvas.getContext('2d');
+  let width, height, nodes, running = false;
+
+  function resize() {
+    width  = canvas.width  = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+
+  (window._appData || fetch(WORKER_URL + '/data').then(r => r.json()))
+    .then(data => {
+      const dots = data.dots || [];
+      resize();
+      if (!width || !height) {
+        width  = canvas.width  = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+      nodes = dots.map(d => ({
+        x:     20 + Math.random() * (width  - 40),
+        y:     20 + Math.random() * (height - 40),
+        vx:    (Math.random() - 0.5) * 0.4,
+        vy:    (Math.random() - 0.5) * 0.4,
+        color: SUBJECT_COLORS[d[5]] || '#aaaaaa',
+        r:     2.5,
+      }));
+      function tick() {
+        if (!running) return;
+        nodes.forEach(d => {
+          d.x += d.vx; d.y += d.vy;
+          if (d.x < 4 || d.x > width  - 4) d.vx *= -1;
+          if (d.y < 4 || d.y > height - 4) d.vy *= -1;
+          d.vx += (Math.random() - 0.5) * 0.02;
+          d.vy += (Math.random() - 0.5) * 0.02;
+          const speed = Math.sqrt(d.vx * d.vx + d.vy * d.vy);
+          if (speed > 0.5) { d.vx *= 0.5 / speed; d.vy *= 0.5 / speed; }
+        });
+        ctx.clearRect(0, 0, width, height);
+        nodes.forEach(d => {
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+          ctx.fillStyle   = d.color;
+          ctx.globalAlpha = 0.75;
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(tick);
+      }
+      const section = document.getElementById('conclusiones');
+      new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting) { running = true;  requestAnimationFrame(tick); }
+        else                           { running = false; }
+      }, { threshold: 0.05 }).observe(section);
+      const rect = section.getBoundingClientRect();
+      if (rect.top < window.innerHeight && rect.bottom > 0) {
+        running = true;
+        requestAnimationFrame(tick);
+      }
+    })
+    .catch(() => { canvas.style.display = 'none'; });
+})();
+</script>
+
 <script>
 const KEYWORD_COLORS = {
   'desaparecidos':'#ffffff','madres buscadoras':'#ffffff','personas desaparecidas':'#ffffff',
@@ -1335,8 +1728,8 @@ const KEYWORD_COLORS = {
   'lópez obrador':'#f4b723','morena':'#f4b723','pan':'#f4b723','pri':'#f4b723',
   'oposición':'#f4b723','cuarta transformación':'#f4b723','corrupción':'#f4b723',
   'inflación':'#00ab8c','salario mínimo':'#00ab8c','inversiones':'#00ab8c',
-  'medicamentos':'#5f2a91','imss bienestar':'#5f2a91','vacunas':'#5f2a91',
-  'insumos médicos':'#5f2a91','personal de salud':'#5f2a91',
+  'medicamentos':'#b06df5','imss bienestar':'#b06df5','vacunas':'#b06df5',
+  'insumos médicos':'#b06df5','personal de salud':'#b06df5',
 };
 (function() {
   const section = document.getElementById('welcome');
@@ -1346,8 +1739,8 @@ const KEYWORD_COLORS = {
   let width, height, nodes;
 
   function resize() {
-    width  = canvas.width  = section.offsetWidth  || window.innerWidth;
-    height = canvas.height = section.offsetHeight || window.innerHeight;
+    width  = canvas.width  = window.innerWidth;
+    height = canvas.height = window.innerHeight;
   }
 
   window.addEventListener('resize', resize);
@@ -2106,8 +2499,8 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
       if (!_dayAxisParams) return;
       const { daysInMonth, bw, MB } = _dayAxisParams;
       p.noStroke();
-      p.textFont('Courier New');
-      p.textSize(Math.max(9, Math.min(11, W / 80)));
+      p.textFont('Kameron');
+      p.textSize(12);
       const [tr,tg,tb] = p5txt();
       const chartBottom = H - MB;
 
@@ -2153,8 +2546,8 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
     function drawAxis() {
       if (dayStackMo >= 0) { drawDayAxis(); return; }
       p.noStroke();
-      p.textFont('Courier New');
-      p.textSize(Math.max(7.5, Math.min(10, W/170)));
+      p.textFont('Kameron');
+      p.textSize(12);
       const [tr,tg,tb] = p5txt();
 
       if (viewMode === 'month') {
@@ -2714,6 +3107,30 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
   }
 })();
 
+</script>
+
+<div id="dot-note">Cada punto representa una frase mencionada por la presidenta.</div>
+<script>
+(function () {
+  const note = document.getElementById('dot-note');
+  function update() {
+    const welcome = document.getElementById('welcome');
+    const rect = welcome.getBoundingClientRect();
+    if (rect.bottom <= 0) {
+      note.classList.add('visible');
+      return;
+    }
+    if (rect.top >= window.innerHeight) {
+      note.classList.remove('visible');
+      return;
+    }
+    const scrolled = -rect.top;
+    const vh = window.innerHeight;
+    note.classList.toggle('visible', scrolled >= vh * 0.6);
+  }
+  window.addEventListener('scroll', update, { passive: true });
+  update();
+})();
 </script>
 </body>
 </html>
