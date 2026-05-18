@@ -34,10 +34,7 @@ const g=sankey({nodes:rNodes.map(d=>({...d})),links:rLinks.map(d=>({...d}))});
 const subNode=g.nodes.find(d=>d.type==="subject");
 const svg=d3.select("#sk").append("svg")
   .attr("viewBox","0 0 "+W+" "+H).attr("width","100%");
-// ── COL 1: manual full-height rect ───────────────────────────────
-svg.append("rect")
-  .attr("x",COL1_X0).attr("y",MT).attr("width",COL1_W)
-  .attr("height",H-MT-MB).attr("fill",FILL).attr("rx",2);
+// ── COL 1: split rects drawn after band calculation ─────────────
 // ── PROPORTIONAL LINK col1 → col2 ────────────────────────────────
 // Band on col1 right edge, centered, height proportional to subject/global
 const col1H = H-MT-MB;
@@ -50,6 +47,23 @@ const linkPath=`M${COL1_X1},${bandY0} C${midX},${bandY0} ${midX},${sY0} ${COL2_X
   L${COL2_X0},${sY1} C${midX},${sY1} ${midX},${bandY1} ${COL1_X1},${bandY1} Z`;
 svg.append("path").attr("d",linkPath)
   .attr("fill",FILL).attr("fill-opacity",LOPAC);
+// COL 1 segments
+// Top black segment (above band)
+if(bandY0 > MT + 1){
+  svg.append("rect").attr("x",COL1_X0).attr("y",MT)
+    .attr("width",COL1_W).attr("height",bandY0-MT)
+    .attr("fill","#000000").attr("stroke","#ffffff").attr("stroke-width",0.8).attr("rx",2);
+}
+// Middle colored segment (proportional band)
+svg.append("rect").attr("x",COL1_X0).attr("y",bandY0)
+  .attr("width",COL1_W).attr("height",bandH)
+  .attr("fill",FILL).attr("rx",0);
+// Bottom black segment (below band)
+if(bandY1 < H-MB - 1){
+  svg.append("rect").attr("x",COL1_X0).attr("y",bandY1)
+    .attr("width",COL1_W).attr("height",(H-MB)-bandY1)
+    .attr("fill","#000000").attr("stroke","#ffffff").attr("stroke-width",0.8).attr("rx",2);
+}
 // ── COL 2: subject rect (full height from sankey) ────────────────
 svg.append("rect")
   .attr("x",subNode.x0).attr("y",subNode.y0)
