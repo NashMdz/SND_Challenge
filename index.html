@@ -1935,6 +1935,7 @@ const KEYWORD_COLORS = {
   <div id="chart-area"></div>
   <div id="leg"></div>
 </div>
+</div><!-- /panel-explore -->
 
 
 <!-- ── PANEL CONSULTAR ───────────────────────────── -->
@@ -2522,6 +2523,15 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
       p.noStroke();
     }
 
+    /* Etiquetas de mes que caben en el ancho disponible, todas al mismo nivel:
+       "Oct 24" → "Oct" → "O". Si caben completas se dibujan igual que antes. */
+    function fitLabels(labels, maxW) {
+      const fits = arr => arr.every(l => p.textWidth(l) <= maxW);
+      if (fits(labels)) return labels;
+      const short = labels.map(l => l.split(' ')[0]);
+      return fits(short) ? short : short.map(s => s.charAt(0));
+    }
+
     /* ── Eje X ───────────────────────────────────────── */
     function drawAxis() {
       if (dayStackMo >= 0) { drawDayAxis(); return; }
@@ -2532,16 +2542,21 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
 
       if (viewMode === 'month') {
         const bw = (W - M.left - M.right) / MO_LABEL.length;
+        const lbls = fitLabels(MO_LABEL, bw - 2);
         for (let i=0; i<MO_LABEL.length; i++) {
           const x = M.left + i*bw;
           if (i%2===0) { p.fill(tr,tg,tb,6); p.rect(x, M.top, bw, H-M.top-M.bottom); }
           p.fill(tr,tg,tb,210); p.textAlign(p.CENTER);
-          p.text(MO_LABEL[i], x+bw/2, H-M.bottom+14);
+          p.text(lbls[i], x+bw/2, H-M.bottom+14);
         }
       } else {
         const t0=DAY_KEYS[0].getTime(), t1=DAY_KEYS[DAY_KEYS.length-1].getTime(), span=t1-t0||1;
         const xL=M.left+28, xR=W-M.right-28;
         const months = monthRange(DAY_KEYS[0], DAY_KEYS[DAY_KEYS.length-1]);
+        // Espacio del mes completo más angosto → misma abreviación para todas
+        const mx = mo => xL + (mo.getTime()-t0)/span*(xR-xL);
+        const minGap = Math.min(...months.slice(0, -1).map((mo, i) => mx(months[i+1]) - mx(mo) - 8));
+        const lbls = fitLabels(months.map(mo => `${MES_ES[mo.getMonth()]} ${String(mo.getFullYear()).slice(2)}`), minGap);
         months.forEach((mo, i) => {
           const x = xL + (mo.getTime()-t0)/span*(xR-xL);
           if (i%2===0 && i+1<months.length) {
@@ -2553,7 +2568,7 @@ function initViz({ KW, kwN, MO_LABEL, DAY_KEYS, dots, SECS, SECS_TIME_BUILT }) {
             p.line(x, M.top, x, H-M.bottom); p.noStroke();
           }
           p.fill(tr,tg,tb,210); p.textAlign(p.LEFT);
-          p.text(`${MES_ES[mo.getMonth()]} ${String(mo.getFullYear()).slice(2)}`, x+4, H-M.bottom+14);
+          p.text(lbls[i], x+4, H-M.bottom+14);
         });
       }
     }
@@ -3067,13 +3082,16 @@ window.addEventListener('DOMContentLoaded', () => {
       btn.classList.add('active');
       const target = btn.dataset.tab;
       Object.entries(panels).forEach(([key, el]) => {
-        el.style.display = key === target ? 'block' : 'none';
+        // panel-explore es flex en el CSS; panel-query es block
+        el.style.display = key === target ? (key === 'explore' ? 'flex' : 'block') : 'none';
       });
       const fuentesNote = document.getElementById('fuentes-note');
       if (fuentesNote) {
-        fuentesNote.style.display = key === 'explore' ? 'block' : 'none';
+        fuentesNote.style.display = target === 'explore' ? 'block' : 'none';
       }
       document.getElementById('tooltip').style.opacity = 0;
+      // Al volver a Explorar, recalcula el tamaño del canvas p5 (mismo truco que el Layout Meter)
+      if (target === 'explore') window.dispatchEvent(new Event('resize'));
     });
   });
 })();
@@ -3271,6 +3289,39 @@ window.addEventListener('DOMContentLoaded', () => {
   color: rgba(0,255,100,0.9); font-family: monospace; font-size: 11px;
   padding: 5px 12px; z-index: 99999; border-radius: 0 0 6px 0;
   pointer-events: none; letter-spacing: 0.5px; line-height: 1.7;
+}
+</style>
+
+<!-- ══ AJUSTES DE LAYOUT ════════════════════════════════════
+     Solo añade reglas: no cambia fuentes, colores ni APIs, y cada
+     ajuste actúa únicamente cuando el contenido no cabe. -->
+<style>
+/* 1. Explorador: si la gráfica (750px) + leyenda no caben en el panel
+      (100vh − 69px), la gráfica se encoge para que se vean las etiquetas
+      de los meses y la leyenda. Donde ya cabía, no cambia nada. */
+#cw { min-height: 0; }
+#chart-area { flex-shrink: 1; min-height: 0; }
+/* Franja inferior libre para que "Fuentes y metodología" no tape la leyenda */
+#panel-explore { padding-bottom: 72px; }
+
+/* 2. Centrado "seguro" de los paneles fijos: si el contenido cabe, queda
+      centrado igual que antes; si no cabe, se alinea arriba en lugar de
+      cortarse por arriba (logo, firma y título de la portada). */
+#welcome-body, #ad-body, #ape-body, #aap-body, #ae-body, #asp-body {
+  margin-top: auto; margin-bottom: auto;
+}
+
+/* 3. Solo celular */
+@media (max-width: 600px) {
+  /* Portada: menos espacio vacío para que quepa más contenido */
+  #wp-0 { padding-top: 0; }
+  #wp0-logo { margin-bottom: 24px; }
+  #wp-0 br + br { display: none; }
+  /* La nota "Cada punto representa…" queda arriba del nav, no debajo */
+  #dot-note { bottom: 92px; }
+  /* El nav cabe en pantalla cuando aparece "Explora los datos" */
+  #story-nav { gap: 6px; padding: 8px 12px; }
+  #snav-dots { gap: 5px; }
 }
 </style>
 
